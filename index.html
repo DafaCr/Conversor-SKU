@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversor de códigos</title>
+
+  <!-- Evita que el navegador guarde en caché una versión vieja de este HTML -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="tarjeta">
+    <h1 class="titulo">Conversor de códigos</h1>
+
+    <label for="input-codigo" class="etiqueta">Código del producto</label>
+    <input
+      type="text"
+      id="input-codigo"
+      class="input-codigo"
+      inputmode="numeric"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      placeholder="Escanea o escribe el código…"
+      autofocus
+    >
+
+    <section id="resultado" class="resultado resultado--vacio" aria-live="polite">
+      <span class="resultado-etiqueta">Código SKU</span>
+      <span id="resultado-valor" class="resultado-valor">—</span>
+      <button id="btn-copiar" class="btn-copiar" type="button" hidden>Copiar</button>
+    </section>
+
+    <p id="contador" class="contador"></p>
+  </main>
+
+  <!-- codigos.js debe cargarse ANTES que script.js -->
+  <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
+  <script src="codigos.js?v=1"></script>
+  <script src="script.js"></script>
+</body>
+</html>

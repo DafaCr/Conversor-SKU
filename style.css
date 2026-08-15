@@ -1,0 +1,172 @@
+:root {
+  --fondo: #14181f;
+  --tarjeta: #1c222c;
+  --texto: #f2f4f7;
+  --texto-tenue: #8992a3;
+  --acento: #3ea6ff;
+  --ok-fondo: #123321;
+  --ok-borde: #2eb872;
+  --ok-texto: #6fe3a3;
+  --error-fondo: #3a1418;
+  --error-borde: #e5484d;
+  --error-texto: #ff8b8f;
+  --radio: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 560px;
+  background: var(--tarjeta);
+  border-radius: var(--radio);
+  padding: 40px 36px 32px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.titulo {
+  margin: 0 0 28px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.etiqueta {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--texto-tenue);
+  margin-bottom: 8px;
+}
+
+.input-codigo {
+  width: 100%;
+  font-size: 1.6rem;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 2px solid #313a49;
+  background: #0f1319;
+  color: var(--texto);
+  outline: none;
+  text-align: center;
+  letter-spacing: 0.04em;
+  transition: border-color 0.15s ease;
+}
+
+.input-codigo:focus {
+  border-color: var(--acento);
+}
+
+.resultado {
+  margin-top: 28px;
+  padding: 28px 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px solid #313a49;
+  background: #10151d;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.resultado-etiqueta {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--texto-tenue);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.resultado-valor {
+  display: block;
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+}
+
+.resultado--vacio .resultado-valor {
+  color: var(--texto-tenue);
+  font-size: 2.5rem;
+}
+
+.resultado--ok {
+  background: var(--ok-fondo);
+  border-color: var(--ok-borde);
+}
+
+.resultado--ok .resultado-valor {
+  color: var(--ok-texto);
+}
+
+.resultado--error {
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+  animation: sacudir 0.2s ease;
+}
+
+.resultado--error .resultado-valor {
+  color: var(--error-texto);
+  font-size: 1.8rem;
+}
+
+@keyframes sacudir {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.btn-copiar {
+  margin-top: 16px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--acento);
+  background: transparent;
+  color: var(--acento);
+  cursor: pointer;
+}
+
+.btn-copiar:hover {
+  background: var(--acento);
+  color: #06131f;
+}
+
+.btn-copiar.copiado {
+  border-color: var(--ok-borde);
+  color: var(--ok-texto);
+}
+
+.contador {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--texto-tenue);
+}
+
+@media (max-width: 480px) {
+  .tarjeta {
+    padding: 28px 20px 24px;
+  }
+  .resultado-valor {
+    font-size: 3rem;
+  }
+}

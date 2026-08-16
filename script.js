@@ -70,9 +70,10 @@
     resultadoValor.textContent = sku;
 
     btnCopiar.hidden = false;
-    btnCopiar.classList.remove("copiado");
-    btnCopiar.textContent = "Copiar";
     btnCopiar.dataset.valor = sku;
+
+    // Copiar automáticamente en cuanto aparece el resultado.
+    copiarAlPortapapeles(sku);
   }
 
   function mostrarResultadoError() {
@@ -83,9 +84,14 @@
     btnCopiar.hidden = true;
   }
 
-  btnCopiar.addEventListener("click", function () {
-    const valor = btnCopiar.dataset.valor;
-    if (!valor) return;
+  function copiarAlPortapapeles(valor) {
+    if (!navigator.clipboard) {
+      // El navegador no soporta la API de portapapeles (por ejemplo,
+      // si la página se abre como archivo local en vez de por HTTPS).
+      btnCopiar.textContent = "Copiar";
+      btnCopiar.classList.remove("copiado");
+      return;
+    }
 
     navigator.clipboard.writeText(valor).then(function () {
       btnCopiar.textContent = "¡Copiado!";
@@ -95,8 +101,17 @@
         btnCopiar.classList.remove("copiado");
       }, 1200);
     }).catch(function () {
-      // Si el navegador bloquea el portapapeles (por ejemplo, sin HTTPS),
-      // no rompemos nada; el usuario igual puede leer el SKU en pantalla.
+      // Si el navegador bloquea el copiado automático (algunos exigen
+      // que el copiado ocurra tras un clic directo del usuario), no
+      // rompemos nada: el botón "Copiar" sigue funcionando manualmente.
+      btnCopiar.textContent = "Copiar";
+      btnCopiar.classList.remove("copiado");
     });
+  }
+
+  btnCopiar.addEventListener("click", function () {
+    const valor = btnCopiar.dataset.valor;
+    if (!valor) return;
+    copiarAlPortapapeles(valor);
   });
 })();

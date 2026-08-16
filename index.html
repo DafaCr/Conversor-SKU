@@ -10,23 +10,23 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
   <main class="tarjeta">
     <h1 class="titulo">Conversor de códigos</h1>
 
-    <label for="input-codigo" class="etiqueta">Código del producto</label>
+    <label for="input-codigo" class="etiqueta">Código o nombre del producto</label>
     <input
       type="text"
       id="input-codigo"
       class="input-codigo"
-      inputmode="numeric"
+      inputmode="text"
       autocomplete="off"
       autocorrect="off"
       spellcheck="false"
-      placeholder="Escanea o escribe el código…"
+      placeholder="Escanea un código o escribe el nombre…"
       autofocus
     >
 
@@ -37,12 +37,17 @@
       <button id="btn-copiar" class="btn-copiar" type="button" hidden>Copiar</button>
     </section>
 
+    <section id="lista-resultados" class="lista-resultados" hidden aria-live="polite">
+      <p class="lista-titulo">Varios productos coinciden, elige uno:</p>
+      <div id="lista-items" class="lista-items"></div>
+    </section>
+
     <p id="contador" class="contador"></p>
   </main>
 
   <!-- codigos.js debe cargarse ANTES que script.js -->
   <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
-  <script src="codigos.js?v=4"></script>
-  <script src="script.js?v=4"></script>
+  <script src="codigos.js?v=6"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

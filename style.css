@@ -190,6 +190,59 @@ body {
   color: var(--texto-tenue);
 }
 
+.lista-resultados {
+  margin-top: 20px;
+}
+
+.lista-titulo {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+  text-align: center;
+}
+
+.lista-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 2px solid #313a49;
+  background: #10151d;
+  color: var(--texto);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.lista-item:hover,
+.lista-item:focus-visible {
+  border-color: var(--acento);
+  background: #141b26;
+  outline: none;
+}
+
+.lista-item-nombre {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.lista-item-sku {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ok-texto);
+  white-space: nowrap;
+}
+
 @media (max-width: 480px) {
   .tarjeta {
     padding: 28px 20px 24px;

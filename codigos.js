@@ -33,6 +33,7 @@
 
 const codigos = {
   "1234": { skus: ["4321"], nombre: "Prueba 1" },
+  "cafe": { skus: ["1008142"], nombre: "Cafe" },
   "7758451236": { skus: ["0047"], nombre: "Prueba 2" },
   "8854219632": { skus: ["0048"], nombre: "Prueba 3" },
   "9876543210": { skus: ["0049"], nombre: "Prueba 4" },
@@ -43,5 +44,14 @@ const codigos = {
   "7501234500033": { skus: ["0100"], nombre: "Prueba 9" },
   "7501234500040": { skus: ["0051"], nombre: "Prueba 10" },
   "7501234500057": { skus: ["0052"], nombre: "Prueba 11" },
-  "5555": { skus: ["0047", "0048"], nombre: "Combo Prueba 2 + Prueba 3" }
+
+  "5555": { skus: ["0047", "0048"], nombre: "Combo Prueba 2 + Prueba 3" },
+  "Mixto": { skus: ["1013621", "1008142"], nombre: "Mixto + Cafe" },
+
+  // PRODUCTOS INDIVIDUALES / COMBOS
+  "bols": { skus: ["1014459"], nombre: "Bolsa" },
+  "croa": { skus: ["1016732", "1008142"], nombre: "Croissant + Cafe" },
+  "mixt": { skus: ["1013621", "1008142"], nombre: "Mixto Completo + Cafe" },
+  "moka": { skus: ["1004288"], nombre: "Moka" },
+  "capu": { skus: ["1004286"], nombre: "Capuccino" }
 };

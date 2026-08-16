@@ -108,6 +108,19 @@ body {
   font-size: 2.5rem;
 }
 
+.resultado-nombre {
+  display: block;
+  margin-top: 10px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--texto);
+  letter-spacing: 0.01em;
+}
+
+.resultado--vacio .resultado-nombre {
+  display: none;
+}
+
 .resultado--ok {
   background: var(--ok-fondo);
   border-color: var(--ok-borde);
@@ -126,6 +139,10 @@ body {
 .resultado--error .resultado-valor {
   color: var(--error-texto);
   font-size: 1.8rem;
+}
+
+.resultado--error .resultado-nombre {
+  display: none;
 }
 
 @keyframes sacudir {

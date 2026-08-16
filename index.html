@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -33,6 +33,7 @@
     <section id="resultado" class="resultado resultado--vacio" aria-live="polite">
       <span class="resultado-etiqueta">Código SKU</span>
       <span id="resultado-valor" class="resultado-valor">—</span>
+      <span id="resultado-nombre" class="resultado-nombre"></span>
       <button id="btn-copiar" class="btn-copiar" type="button" hidden>Copiar</button>
     </section>
 
@@ -41,7 +42,7 @@
 
   <!-- codigos.js debe cargarse ANTES que script.js -->
   <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
-  <script src="codigos.js?v=1"></script>
-  <script src="script.js"></script>
+  <script src="codigos.js?v=4"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

@@ -99,37 +99,92 @@ body {
   display: none;
 }
 
-.resultado-etiqueta {
-  display: block;
-  font-size: 0.8rem;
+.resultado-nombre:empty {
+  display: none;
+}
+
+.skus-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sku-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+}
+
+.sku-fila--vacia {
+  background: transparent;
+  justify-content: center;
+  text-align: center;
+}
+
+.sku-etiqueta {
+  font-size: 0.75rem;
   color: var(--texto-tenue);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 6px;
+  flex-shrink: 0;
 }
 
-.resultado-valor {
-  display: block;
-  font-size: 1.5rem;
+.sku-fila--vacia .sku-etiqueta {
+  margin-right: 8px;
+}
+
+.sku-valor {
+  flex: 1;
+  font-size: 1.4rem;
   font-weight: 700;
-  line-height: 1.1;
   letter-spacing: 0.02em;
   word-break: break-word;
   color: var(--texto-tenue);
+  text-align: center;
 }
 
-.resultado--vacio .resultado-valor {
-  color: var(--texto-tenue);
-  font-size: 1.5rem;
+.resultado--ok .sku-valor {
+  color: var(--ok-texto);
+}
+
+.sku-copiar {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--acento);
+  background: transparent;
+  color: var(--acento);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.sku-copiar:hover {
+  background: var(--acento);
+  color: #06131f;
+}
+
+.sku-copiar.copiado {
+  border-color: var(--ok-borde);
+  color: var(--ok-texto);
+}
+
+.mensaje-error {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--error-texto);
+  text-align: center;
 }
 
 .resultado--ok {
   background: var(--ok-fondo);
   border-color: var(--ok-borde);
-}
-
-.resultado--ok .resultado-valor {
-  color: var(--ok-texto);
 }
 
 .resultado--ok .resultado-nombre {
@@ -142,45 +197,10 @@ body {
   animation: sacudir 0.2s ease;
 }
 
-.resultado--error .resultado-valor {
-  color: var(--error-texto);
-  font-size: 1.9rem;
-  font-weight: 800;
-}
-
-.resultado--error .resultado-etiqueta {
-  display: none;
-}
-
-.resultado--error .resultado-nombre {
-  display: none;
-}
-
 @keyframes sacudir {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
   75% { transform: translateX(6px); }
-}
-
-.btn-copiar {
-  margin-top: 16px;
-  padding: 8px 20px;
-  font-size: 0.9rem;
-  border-radius: 8px;
-  border: 1px solid var(--acento);
-  background: transparent;
-  color: var(--acento);
-  cursor: pointer;
-}
-
-.btn-copiar:hover {
-  background: var(--acento);
-  color: #06131f;
-}
-
-.btn-copiar.copiado {
-  border-color: var(--ok-borde);
-  color: var(--ok-texto);
 }
 
 .contador {

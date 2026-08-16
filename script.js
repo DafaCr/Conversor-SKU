@@ -9,9 +9,9 @@
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");
-  const resultadoValor = document.getElementById("resultado-valor");
   const resultadoNombre = document.getElementById("resultado-nombre");
-  const btnCopiar = document.getElementById("btn-copiar");
+  const skusLista = document.getElementById("skus-lista");
+  const mensajeError = document.getElementById("mensaje-error");
   const contador = document.getElementById("contador");
   const listaResultados = document.getElementById("lista-resultados");
   const listaItems = document.getElementById("lista-items");
@@ -20,15 +20,14 @@
   const totalCodigos = typeof codigos === "object" ? Object.keys(codigos).length : 0;
   contador.textContent = totalCodigos + " código(s) cargados";
 
-  // Ya no restringimos el input solo a números: ahora también se
-  // puede escribir el nombre del producto para buscarlo.
+  mostrarResultadoVacio();
 
   // Mantener el foco siempre en el input, salvo que el usuario
-  // esté interactuando con el botón de copiar u otro control.
+  // esté interactuando con un botón de copiar o un ítem de la lista.
   document.addEventListener("click", function (evento) {
-    const esBotonCopiar = evento.target === btnCopiar;
-    const esItemDeLista = evento.target.closest && evento.target.closest(".lista-item");
-    if (!esBotonCopiar && !esItemDeLista) {
+    const tocaBotonCopiar = evento.target.closest && evento.target.closest(".sku-copiar");
+    const tocaItemDeLista = evento.target.closest && evento.target.closest(".lista-item");
+    if (!tocaBotonCopiar && !tocaItemDeLista) {
       input.focus();
     }
   });
@@ -86,23 +85,24 @@
     resultado.classList.remove("resultado--vacio", "resultado--error");
     resultado.classList.add("resultado--ok");
 
-    const textoSku = skus.join(" + ");
-    resultadoValor.textContent = textoSku;
+    mensajeError.hidden = true;
     resultadoNombre.textContent = nombre || "";
 
-    btnCopiar.hidden = false;
-    btnCopiar.dataset.valor = textoSku;
+    renderizarSkus(skus);
 
-    // Copiar automáticamente en cuanto aparece el resultado.
-    copiarAlPortapapeles(textoSku);
+    // Si solo hay un SKU (caso normal, sin combo), se copia
+    // automáticamente en cuanto aparece el resultado.
+    if (skus.length === 1) {
+      const primerBoton = skusLista.querySelector(".sku-copiar");
+      copiarAlPortapapeles(skus[0], primerBoton);
+    }
   }
 
   function mostrarResultadoError() {
     resultado.classList.remove("resultado--vacio", "resultado--ok");
-    resultadoValor.textContent = "CÓDIGO NO REGISTRADO";
     resultadoNombre.textContent = "";
-
-    btnCopiar.hidden = true;
+    skusLista.innerHTML = "";
+    mensajeError.hidden = false;
 
     // Reiniciar la animación de sacudida aunque sea un error
     // justo después de otro error (para que se repita cada vez).
@@ -114,9 +114,55 @@
   function mostrarResultadoVacio() {
     resultado.classList.remove("resultado--ok", "resultado--error");
     resultado.classList.add("resultado--vacio");
-    resultadoValor.textContent = "—";
     resultadoNombre.textContent = "";
-    btnCopiar.hidden = true;
+    mensajeError.hidden = true;
+
+    skusLista.innerHTML = "";
+    const filaVacia = document.createElement("div");
+    filaVacia.className = "sku-fila sku-fila--vacia";
+
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "sku-etiqueta";
+    etiqueta.textContent = "Código SKU";
+
+    const valor = document.createElement("span");
+    valor.className = "sku-valor";
+    valor.textContent = "—";
+
+    filaVacia.appendChild(etiqueta);
+    filaVacia.appendChild(valor);
+    skusLista.appendChild(filaVacia);
+  }
+
+  function renderizarSkus(skus) {
+    skusLista.innerHTML = "";
+    const esCombo = skus.length > 1;
+
+    skus.forEach(function (sku, indice) {
+      const fila = document.createElement("div");
+      fila.className = "sku-fila";
+
+      const etiqueta = document.createElement("span");
+      etiqueta.className = "sku-etiqueta";
+      etiqueta.textContent = esCombo ? "SKU " + (indice + 1) : "Código SKU";
+
+      const valor = document.createElement("span");
+      valor.className = "sku-valor";
+      valor.textContent = sku;
+
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "sku-copiar";
+      boton.textContent = "Copiar";
+      boton.addEventListener("click", function () {
+        copiarAlPortapapeles(sku, boton);
+      });
+
+      fila.appendChild(etiqueta);
+      fila.appendChild(valor);
+      fila.appendChild(boton);
+      skusLista.appendChild(fila);
+    });
   }
 
   function mostrarListaResultados(coincidencias) {
@@ -156,34 +202,27 @@
     listaItems.innerHTML = "";
   }
 
-  function copiarAlPortapapeles(valor) {
+  function copiarAlPortapapeles(valor, boton) {
+    if (!boton) return;
+
     if (!navigator.clipboard) {
       // El navegador no soporta la API de portapapeles (por ejemplo,
       // si la página se abre como archivo local en vez de por HTTPS).
-      btnCopiar.textContent = "Copiar";
-      btnCopiar.classList.remove("copiado");
       return;
     }
 
     navigator.clipboard.writeText(valor).then(function () {
-      btnCopiar.textContent = "¡Copiado!";
-      btnCopiar.classList.add("copiado");
+      const textoOriginal = "Copiar";
+      boton.textContent = "¡Copiado!";
+      boton.classList.add("copiado");
       setTimeout(function () {
-        btnCopiar.textContent = "Copiar";
-        btnCopiar.classList.remove("copiado");
+        boton.textContent = textoOriginal;
+        boton.classList.remove("copiado");
       }, 1200);
     }).catch(function () {
       // Si el navegador bloquea el copiado automático (algunos exigen
       // que el copiado ocurra tras un clic directo del usuario), no
       // rompemos nada: el botón "Copiar" sigue funcionando manualmente.
-      btnCopiar.textContent = "Copiar";
-      btnCopiar.classList.remove("copiado");
     });
   }
-
-  btnCopiar.addEventListener("click", function () {
-    const valor = btnCopiar.dataset.valor;
-    if (!valor) return;
-    copiarAlPortapapeles(valor);
-  });
 })();

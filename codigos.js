@@ -43,5 +43,5 @@ const codigos = {
   "7501234500033": { skus: ["0100"], nombre: "Prueba 9" },
   "7501234500040": { skus: ["0051"], nombre: "Prueba 10" },
   "7501234500057": { skus: ["0052"], nombre: "Prueba 11" },
-  "5555555555": { skus: ["0047", "0048"], nombre: "Combo Prueba 2 + Prueba 3" }
+  "5555": { skus: ["0047", "0048"], nombre: "Combo Prueba 2 + Prueba 3" }
 };

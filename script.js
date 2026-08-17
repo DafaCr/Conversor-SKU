@@ -90,12 +90,10 @@
 
     renderizarSkus(skus);
 
-    // Si solo hay un SKU (caso normal, sin combo), se copia
-    // automáticamente en cuanto aparece el resultado.
-    if (skus.length === 1) {
-      const primerBoton = skusLista.querySelector(".sku-copiar");
-      copiarAlPortapapeles(skus[0], primerBoton);
-    }
+    // Siempre se copia automáticamente el primer SKU en cuanto aparece
+    // el resultado (también en combos: se copia el primero de la lista).
+    const primerBoton = skusLista.querySelector(".sku-copiar");
+    copiarAlPortapapeles(skus[0], primerBoton);
   }
 
   function mostrarResultadoError() {

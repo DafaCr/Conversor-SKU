@@ -17,7 +17,17 @@
   // el botón "+" avisa que hace falta configurar Sheets primero.
   // Ejemplo: "https://script.google.com/macros/s/AKfyc.../exec"
   // ------------------------------------------------------------
-  const URL_APPS_SCRIPT = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzxmWSWAkfJzRSecfXdlUvWh6jfVgBe1nYOIS-O23cyDck-QPJLKf3bukjhu0ydUIg/exec";
+
+  // ------------------------------------------------------------
+  // Esta clave debe ser IDÉNTICA a la que pongas en la constante
+  // CLAVE_SECRETA de tu Apps Script. Sirve como filtro simple para
+  // que no cualquiera que encuentre la URL pueda escribir en tu
+  // hoja. No es seguridad perfecta (alguien que vea el código
+  // fuente de la página puede verla), pero evita el abuso casual
+  // o de bots que prueban URLs al azar.
+  // ------------------------------------------------------------
+  const CLAVE_SECRETA = "tambo2026";
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");
@@ -121,7 +131,7 @@
       return;
     }
 
-    fetch(URL_APPS_SCRIPT)
+    fetch(URL_APPS_SCRIPT + "?clave=" + encodeURIComponent(CLAVE_SECRETA))
       .then(function (respuesta) {
         if (!respuesta.ok) throw new Error("Respuesta no válida");
         return respuesta.json();
@@ -340,7 +350,7 @@
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ tipo: "registro", codigo: consulta })
+      body: JSON.stringify({ tipo: "registro", codigo: consulta, clave: CLAVE_SECRETA })
     }).catch(function () {
       // Sin interrumpir al usuario si falla el envío.
     });
@@ -349,6 +359,14 @@
   // ------------------------------------------------------------
   // BOTÓN "+" — Agregar producto nuevo
   // ------------------------------------------------------------
+
+  campoCodigo.addEventListener("input", function () {
+    if (codigoDuplicadoConfirmado !== null) {
+      codigoDuplicadoConfirmado = null;
+      btnGuardar.textContent = "Guardar";
+      modalMensaje.hidden = true;
+    }
+  });
 
   btnAgregar.addEventListener("click", function () {
     abrirModal();
@@ -370,11 +388,16 @@
     guardarProductoNuevo();
   });
 
+  // Para el flujo de "ya existe, ¿reemplazar?" al agregar un producto.
+  let codigoDuplicadoConfirmado = null;
+
   function abrirModal() {
     modalFondo.hidden = false;
     formAgregar.reset();
     modalMensaje.hidden = true;
     modalMensaje.classList.remove("exito");
+    codigoDuplicadoConfirmado = null;
+    btnGuardar.textContent = "Guardar";
     campoNombre.focus();
   }
 
@@ -398,6 +421,20 @@
       return;
     }
 
+    // Si ya existe un producto con ese código y todavía no confirmaron
+    // el reemplazo, mostramos una advertencia y esperamos un segundo
+    // clic en "Guardar" (que ahora dice "Reemplazar") para continuar.
+    const existente = buscarProductoExacto(codigo);
+    if (existente && codigoDuplicadoConfirmado !== codigo.toLowerCase()) {
+      codigoDuplicadoConfirmado = codigo.toLowerCase();
+      mostrarMensajeModal(
+        'Ya existe "' + existente.nombre + '" (SKU ' + existente.skus.join(" + ") + ') con ese código. Presiona "Reemplazar" para sobrescribirlo.',
+        false
+      );
+      btnGuardar.textContent = "Reemplazar";
+      return;
+    }
+
     btnGuardar.disabled = true;
     btnGuardar.textContent = "Guardando…";
 
@@ -409,17 +446,15 @@
         tipo: "nuevo_producto",
         codigo: codigo,
         skus: skusTexto,
-        nombre: nombre
+        nombre: nombre,
+        clave: CLAVE_SECRETA
       })
     }).then(function () {
-      // Con mode "no-cors" no podemos leer si realmente se guardó,
-      // pero como asumimos éxito, lo agregamos también a la lista
-      // activa de esta PC para poder usarlo de inmediato.
       const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
       codigosActivos[codigo] = { skus: skusArray, nombre: nombre };
       actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
 
-      mostrarMensajeModal("Producto guardado. Ya puedes buscarlo.", true);
+      mostrarMensajeModal(existente ? "Producto reemplazado. Ya puedes buscarlo." : "Producto guardado. Ya puedes buscarlo.", true);
       setTimeout(function () {
         cerrarModal();
       }, 1200);

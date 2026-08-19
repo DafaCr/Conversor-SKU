@@ -313,6 +313,10 @@ body {
   z-index: 30;
 }
 
+.modal-fondo[hidden] {
+  display: none;
+}
+
 .modal-tarjeta {
   width: 100%;
   max-width: 420px;

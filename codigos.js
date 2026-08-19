@@ -1,6 +1,12 @@
 // ============================================================
 // CODIGOS.JS
 // ------------------------------------------------------------
+// Si configuraste Google Sheets como fuente principal (ver
+// URL_APPS_SCRIPT en script.js), este archivo funciona como
+// RESPALDO: se usa automáticamente si Sheets no responde (sin
+// internet, Google caído, etc.). Si NO configuraste Sheets,
+// este archivo es la única fuente de productos, como siempre.
+//
 // Este es el ÚNICO archivo que debes modificar para actualizar
 // la lista de códigos de barra, sus SKU y el nombre del producto.
 //

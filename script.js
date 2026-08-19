@@ -1,11 +1,21 @@
 // ============================================================
 // SCRIPT.JS — Lógica del conversor
 // No es necesario tocar este archivo para actualizar códigos.
-// Todos los códigos viven en codigos.js
+// La lista de productos puede venir de dos lugares:
+//   1. Google Sheets (si configuraste URL_APPS_SCRIPT abajo)
+//   2. codigos.js, como respaldo si Sheets no responde
 // ============================================================
 
 (function () {
   "use strict";
+
+  // ------------------------------------------------------------
+  // Pega aquí la URL de tu Google Apps Script (misma URL para
+  // leer productos y para avisar de códigos no encontrados).
+  // Mientras no la reemplaces, la página usa solo codigos.js.
+  // Ejemplo: "https://script.google.com/macros/s/AKfyc.../exec"
+  // ------------------------------------------------------------
+  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzxmWSWAkfJzRSecfXdlUvWh6jfVgBe1nYOIS-O23cyDck-QPJLKf3bukjhu0ydUIg/exec";
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");
@@ -16,11 +26,14 @@
   const listaResultados = document.getElementById("lista-resultados");
   const listaItems = document.getElementById("lista-items");
 
-  // "codigos" viene definido en codigos.js, cargado antes que este archivo
-  const totalCodigos = typeof codigos === "object" ? Object.keys(codigos).length : 0;
-  contador.textContent = totalCodigos + " código(s) cargados";
+  // "codigos" viene definido en codigos.js, cargado antes que este archivo.
+  // Empezamos usando esa lista local; si Google Sheets responde bien,
+  // la reemplazamos por la lista remota (ver cargarProductosRemotos).
+  let codigosActivos = typeof codigos === "object" ? codigos : {};
+  actualizarContador("local");
 
   mostrarResultadoVacio();
+  cargarProductosRemotos();
 
   // Mantener el foco siempre en el input, salvo que el usuario
   // esté interactuando con un botón de copiar o un ítem de la lista.
@@ -43,6 +56,38 @@
     }
   });
 
+  function actualizarContador(origen) {
+    const total = Object.keys(codigosActivos).length;
+    const textoOrigen = origen === "sheets" ? "desde Google Sheets" : "locales";
+    contador.textContent = total + " producto(s) cargados (" + textoOrigen + ")";
+  }
+
+  function cargarProductosRemotos() {
+    // Si no configuraste tu URL de Apps Script todavía, seguimos
+    // usando codigos.js sin intentar nada más.
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      return;
+    }
+
+    fetch(URL_APPS_SCRIPT)
+      .then(function (respuesta) {
+        if (!respuesta.ok) throw new Error("Respuesta no válida");
+        return respuesta.json();
+      })
+      .then(function (productosRemotos) {
+        if (productosRemotos && Object.keys(productosRemotos).length > 0) {
+          codigosActivos = productosRemotos;
+          actualizarContador("sheets");
+        }
+        // Si vino vacío, nos quedamos con los locales sin avisar nada.
+      })
+      .catch(function () {
+        // Sin internet, Google caído, o URL mal configurada:
+        // seguimos usando codigos.js normalmente, sin interrumpir
+        // al usuario ni mostrar ningún error en pantalla.
+      });
+  }
+
   function buscarCodigo() {
     const consulta = input.value.trim();
 
@@ -51,7 +96,7 @@
     }
 
     // 1. Coincidencia exacta por código de barras (lo más común: escaneo)
-    const productoExacto = codigos[consulta];
+    const productoExacto = codigosActivos[consulta];
 
     if (productoExacto) {
       ocultarListaResultados();
@@ -60,7 +105,7 @@
       // 2. No coincide como código exacto: buscamos por nombre,
       //    sin distinguir mayúsculas/minúsculas, coincidencia parcial.
       const consultaMinuscula = consulta.toLowerCase();
-      const coincidencias = Object.values(codigos).filter(function (producto) {
+      const coincidencias = Object.values(codigosActivos).filter(function (producto) {
         return producto.nombre.toLowerCase().indexOf(consultaMinuscula) !== -1;
       });
 
@@ -72,7 +117,7 @@
         mostrarListaResultados(coincidencias);
       } else {
         ocultarListaResultados();
-        mostrarResultadoError();
+        mostrarResultadoError(consulta);
       }
     }
 
@@ -96,7 +141,7 @@
     copiarAlPortapapeles(skus[0], primerBoton);
   }
 
-  function mostrarResultadoError() {
+  function mostrarResultadoError(consulta) {
     resultado.classList.remove("resultado--vacio", "resultado--ok");
     resultadoNombre.textContent = "";
     skusLista.innerHTML = "";
@@ -107,6 +152,8 @@
     resultado.classList.remove("resultado--error");
     void resultado.offsetWidth; // fuerza un reflow
     resultado.classList.add("resultado--error");
+
+    registrarCodigoNoEncontrado(consulta);
   }
 
   function mostrarResultadoVacio() {
@@ -221,6 +268,26 @@
       // Si el navegador bloquea el copiado automático (algunos exigen
       // que el copiado ocurra tras un clic directo del usuario), no
       // rompemos nada: el botón "Copiar" sigue funcionando manualmente.
+    });
+  }
+
+  function registrarCodigoNoEncontrado(consulta) {
+    // Si no configuraste tu URL de Apps Script todavía, no hacemos nada.
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      return;
+    }
+
+    // Usamos mode "no-cors" porque Apps Script no siempre responde con
+    // encabezados CORS en peticiones POST. No necesitamos leer la
+    // respuesta, solo que el dato llegue y se guarde en la hoja.
+    fetch(URL_APPS_SCRIPT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ codigo: consulta })
+    }).catch(function () {
+      // Si no hay internet o falla el envío, no interrumpimos al
+      // usuario: el resultado de "no registrado" ya se mostró igual.
     });
   }
 })();

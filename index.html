@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -44,9 +44,33 @@
     <p id="contador" class="contador"></p>
   </main>
 
+  <button id="btn-agregar" class="btn-flotante" type="button" title="Agregar producto" aria-label="Agregar producto">+</button>
+
+  <div id="modal-fondo" class="modal-fondo" hidden>
+    <form id="form-agregar" class="modal-tarjeta">
+      <h2 class="modal-titulo">Agregar producto</h2>
+
+      <label for="campo-nombre" class="modal-etiqueta">Nombre del producto</label>
+      <input type="text" id="campo-nombre" class="modal-input" autocomplete="off" required>
+
+      <label for="campo-sku" class="modal-etiqueta">SKU</label>
+      <input type="text" id="campo-sku" class="modal-input" autocomplete="off" placeholder="Ej: 0047 (o 0047,0048 si es combo)" required>
+
+      <label for="campo-codigo" class="modal-etiqueta">Código de barras (o palabra clave)</label>
+      <input type="text" id="campo-codigo" class="modal-input" autocomplete="off" placeholder="Ej: 7758451236 o cafe" required>
+
+      <p id="modal-mensaje" class="modal-mensaje" hidden></p>
+
+      <div class="modal-botones">
+        <button type="button" id="btn-cancelar" class="modal-btn modal-btn--secundario">Cancelar</button>
+        <button type="submit" id="btn-guardar" class="modal-btn modal-btn--principal">Guardar</button>
+      </div>
+    </form>
+  </div>
+
   <!-- codigos.js debe cargarse ANTES que script.js -->
   <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
   <script src="codigos.js?v=8"></script>
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

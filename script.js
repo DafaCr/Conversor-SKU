@@ -11,11 +11,13 @@
 
   // ------------------------------------------------------------
   // Pega aquí la URL de tu Google Apps Script (misma URL para
-  // leer productos y para avisar de códigos no encontrados).
-  // Mientras no la reemplaces, la página usa solo codigos.js.
+  // leer productos, avisar de códigos no encontrados, y guardar
+  // productos nuevos desde el botón "+").
+  // Mientras no la reemplaces, la página usa solo codigos.js y
+  // el botón "+" avisa que hace falta configurar Sheets primero.
   // Ejemplo: "https://script.google.com/macros/s/AKfyc.../exec"
   // ------------------------------------------------------------
-  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzxmWSWAkfJzRSecfXdlUvWh6jfVgBe1nYOIS-O23cyDck-QPJLKf3bukjhu0ydUIg/exec";
+  const URL_APPS_SCRIPT = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");
@@ -26,21 +28,37 @@
   const listaResultados = document.getElementById("lista-resultados");
   const listaItems = document.getElementById("lista-items");
 
+  const btnAgregar = document.getElementById("btn-agregar");
+  const modalFondo = document.getElementById("modal-fondo");
+  const formAgregar = document.getElementById("form-agregar");
+  const campoNombre = document.getElementById("campo-nombre");
+  const campoSku = document.getElementById("campo-sku");
+  const campoCodigo = document.getElementById("campo-codigo");
+  const modalMensaje = document.getElementById("modal-mensaje");
+  const btnCancelar = document.getElementById("btn-cancelar");
+  const btnGuardar = document.getElementById("btn-guardar");
+
   // "codigos" viene definido en codigos.js, cargado antes que este archivo.
   // Empezamos usando esa lista local; si Google Sheets responde bien,
   // la reemplazamos por la lista remota (ver cargarProductosRemotos).
   let codigosActivos = typeof codigos === "object" ? codigos : {};
   actualizarContador("local");
 
+  // Para la navegación con flechas ↑↓ en la lista de resultados múltiples.
+  let indiceSeleccionado = -1;
+
   mostrarResultadoVacio();
   cargarProductosRemotos();
 
-  // Mantener el foco siempre en el input, salvo que el usuario
-  // esté interactuando con un botón de copiar o un ítem de la lista.
+  // Mantener el foco siempre en el input, salvo que el usuario esté
+  // interactuando con un botón de copiar, un ítem de la lista, el
+  // botón "+", o algo dentro del modal de agregar producto.
   document.addEventListener("click", function (evento) {
     const tocaBotonCopiar = evento.target.closest && evento.target.closest(".sku-copiar");
     const tocaItemDeLista = evento.target.closest && evento.target.closest(".lista-item");
-    if (!tocaBotonCopiar && !tocaItemDeLista) {
+    const tocaBotonAgregar = evento.target.closest && evento.target.closest(".btn-flotante");
+    const tocaModal = evento.target.closest && evento.target.closest(".modal-fondo");
+    if (!tocaBotonCopiar && !tocaItemDeLista && !tocaBotonAgregar && !tocaModal) {
       input.focus();
     }
   });
@@ -50,11 +68,47 @@
   });
 
   input.addEventListener("keydown", function (evento) {
+    // Si hay una lista de varios resultados visible, las flechas
+    // ↑↓ navegan entre ellos y Enter selecciona el resaltado.
+    if (!listaResultados.hidden) {
+      if (evento.key === "ArrowDown") {
+        evento.preventDefault();
+        moverSeleccion(1);
+        return;
+      }
+      if (evento.key === "ArrowUp") {
+        evento.preventDefault();
+        moverSeleccion(-1);
+        return;
+      }
+      if (evento.key === "Enter" && indiceSeleccionado >= 0) {
+        evento.preventDefault();
+        const items = listaItems.querySelectorAll(".lista-item");
+        if (items[indiceSeleccionado]) {
+          items[indiceSeleccionado].click();
+        }
+        return;
+      }
+    }
+
     if (evento.key === "Enter") {
       evento.preventDefault();
       buscarCodigo();
     }
   });
+
+  function moverSeleccion(direccion) {
+    const items = listaItems.querySelectorAll(".lista-item");
+    if (items.length === 0) return;
+
+    indiceSeleccionado = (indiceSeleccionado + direccion + items.length) % items.length;
+
+    items.forEach(function (item, indice) {
+      item.classList.toggle("lista-item--activa", indice === indiceSeleccionado);
+    });
+
+    items[indiceSeleccionado].scrollIntoView({ block: "nearest" });
+  }
 
   function actualizarContador(origen) {
     const total = Object.keys(codigosActivos).length;
@@ -63,8 +117,6 @@
   }
 
   function cargarProductosRemotos() {
-    // Si no configuraste tu URL de Apps Script todavía, seguimos
-    // usando codigos.js sin intentar nada más.
     if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
       return;
     }
@@ -79,13 +131,32 @@
           codigosActivos = productosRemotos;
           actualizarContador("sheets");
         }
-        // Si vino vacío, nos quedamos con los locales sin avisar nada.
       })
       .catch(function () {
         // Sin internet, Google caído, o URL mal configurada:
-        // seguimos usando codigos.js normalmente, sin interrumpir
-        // al usuario ni mostrar ningún error en pantalla.
+        // seguimos usando codigos.js normalmente.
       });
+  }
+
+  function buscarProductoExacto(consulta) {
+    // Primero probamos coincidencia exacta tal cual (rápido y cubre
+    // el caso más común: escaneo de código de barras numérico).
+    if (codigosActivos[consulta]) {
+      return codigosActivos[consulta];
+    }
+
+    // Si no hubo coincidencia exacta, buscamos ignorando
+    // mayúsculas/minúsculas (útil para claves con letras, como
+    // "cafe", "CROA", "Mixt", etc.)
+    const consultaMinuscula = consulta.toLowerCase();
+    const claves = Object.keys(codigosActivos);
+    for (let i = 0; i < claves.length; i++) {
+      if (claves[i].toLowerCase() === consultaMinuscula) {
+        return codigosActivos[claves[i]];
+      }
+    }
+
+    return undefined;
   }
 
   function buscarCodigo() {
@@ -95,15 +166,12 @@
       return;
     }
 
-    // 1. Coincidencia exacta por código de barras (lo más común: escaneo)
-    const productoExacto = codigosActivos[consulta];
+    const productoExacto = buscarProductoExacto(consulta);
 
     if (productoExacto) {
       ocultarListaResultados();
       mostrarResultadoOk(productoExacto.skus, productoExacto.nombre);
     } else {
-      // 2. No coincide como código exacto: buscamos por nombre,
-      //    sin distinguir mayúsculas/minúsculas, coincidencia parcial.
       const consultaMinuscula = consulta.toLowerCase();
       const coincidencias = Object.values(codigosActivos).filter(function (producto) {
         return producto.nombre.toLowerCase().indexOf(consultaMinuscula) !== -1;
@@ -121,8 +189,6 @@
       }
     }
 
-    // Dejar el texto anterior seleccionado para que, al escribir
-    // el siguiente, se reemplace automáticamente sin borrar a mano.
     input.select();
   }
 
@@ -135,8 +201,6 @@
 
     renderizarSkus(skus);
 
-    // Siempre se copia automáticamente el primer SKU en cuanto aparece
-    // el resultado (también en combos: se copia el primero de la lista).
     const primerBoton = skusLista.querySelector(".sku-copiar");
     copiarAlPortapapeles(skus[0], primerBoton);
   }
@@ -147,10 +211,8 @@
     skusLista.innerHTML = "";
     mensajeError.hidden = false;
 
-    // Reiniciar la animación de sacudida aunque sea un error
-    // justo después de otro error (para que se repita cada vez).
     resultado.classList.remove("resultado--error");
-    void resultado.offsetWidth; // fuerza un reflow
+    void resultado.offsetWidth;
     resultado.classList.add("resultado--error");
 
     registrarCodigoNoEncontrado(consulta);
@@ -212,6 +274,7 @@
 
   function mostrarListaResultados(coincidencias) {
     listaItems.innerHTML = "";
+    indiceSeleccionado = -1;
 
     coincidencias.forEach(function (producto) {
       const boton = document.createElement("button");
@@ -245,14 +308,13 @@
   function ocultarListaResultados() {
     listaResultados.hidden = true;
     listaItems.innerHTML = "";
+    indiceSeleccionado = -1;
   }
 
   function copiarAlPortapapeles(valor, boton) {
     if (!boton) return;
 
     if (!navigator.clipboard) {
-      // El navegador no soporta la API de portapapeles (por ejemplo,
-      // si la página se abre como archivo local en vez de por HTTPS).
       return;
     }
 
@@ -265,29 +327,113 @@
         boton.classList.remove("copiado");
       }, 1200);
     }).catch(function () {
-      // Si el navegador bloquea el copiado automático (algunos exigen
-      // que el copiado ocurra tras un clic directo del usuario), no
-      // rompemos nada: el botón "Copiar" sigue funcionando manualmente.
+      // El botón "Copiar" sigue funcionando manualmente.
     });
   }
 
   function registrarCodigoNoEncontrado(consulta) {
-    // Si no configuraste tu URL de Apps Script todavía, no hacemos nada.
     if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
       return;
     }
 
-    // Usamos mode "no-cors" porque Apps Script no siempre responde con
-    // encabezados CORS en peticiones POST. No necesitamos leer la
-    // respuesta, solo que el dato llegue y se guarde en la hoja.
     fetch(URL_APPS_SCRIPT, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ codigo: consulta })
+      body: JSON.stringify({ tipo: "registro", codigo: consulta })
     }).catch(function () {
-      // Si no hay internet o falla el envío, no interrumpimos al
-      // usuario: el resultado de "no registrado" ya se mostró igual.
+      // Sin interrumpir al usuario si falla el envío.
     });
+  }
+
+  // ------------------------------------------------------------
+  // BOTÓN "+" — Agregar producto nuevo
+  // ------------------------------------------------------------
+
+  btnAgregar.addEventListener("click", function () {
+    abrirModal();
+  });
+
+  btnCancelar.addEventListener("click", function () {
+    cerrarModal();
+  });
+
+  modalFondo.addEventListener("click", function (evento) {
+    // Cerrar si se hace clic en el fondo oscuro, no en la tarjeta.
+    if (evento.target === modalFondo) {
+      cerrarModal();
+    }
+  });
+
+  formAgregar.addEventListener("submit", function (evento) {
+    evento.preventDefault();
+    guardarProductoNuevo();
+  });
+
+  function abrirModal() {
+    modalFondo.hidden = false;
+    formAgregar.reset();
+    modalMensaje.hidden = true;
+    modalMensaje.classList.remove("exito");
+    campoNombre.focus();
+  }
+
+  function cerrarModal() {
+    modalFondo.hidden = true;
+    input.focus();
+  }
+
+  function guardarProductoNuevo() {
+    const nombre = campoNombre.value.trim();
+    const skusTexto = campoSku.value.trim();
+    const codigo = campoCodigo.value.trim();
+
+    if (!nombre || !skusTexto || !codigo) {
+      mostrarMensajeModal("Completa los 3 campos.", false);
+      return;
+    }
+
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      mostrarMensajeModal("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar productos nuevos.", false);
+      return;
+    }
+
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = "Guardando…";
+
+    fetch(URL_APPS_SCRIPT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        tipo: "nuevo_producto",
+        codigo: codigo,
+        skus: skusTexto,
+        nombre: nombre
+      })
+    }).then(function () {
+      // Con mode "no-cors" no podemos leer si realmente se guardó,
+      // pero como asumimos éxito, lo agregamos también a la lista
+      // activa de esta PC para poder usarlo de inmediato.
+      const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
+      codigosActivos[codigo] = { skus: skusArray, nombre: nombre };
+      actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
+
+      mostrarMensajeModal("Producto guardado. Ya puedes buscarlo.", true);
+      setTimeout(function () {
+        cerrarModal();
+      }, 1200);
+    }).catch(function () {
+      mostrarMensajeModal("No se pudo guardar (revisa tu conexión a internet).", false);
+    }).finally(function () {
+      btnGuardar.disabled = false;
+      btnGuardar.textContent = "Guardar";
+    });
+  }
+
+  function mostrarMensajeModal(texto, esExito) {
+    modalMensaje.textContent = texto;
+    modalMensaje.hidden = false;
+    modalMensaje.classList.toggle("exito", !!esExito);
   }
 })();

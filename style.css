@@ -271,3 +271,125 @@ body {
     font-size: 1.7rem;
   }
 }
+
+/* --- Resaltado de ítem seleccionado con teclado (flechas ↑↓) --- */
+.lista-item--activa {
+  border-color: var(--acento);
+  background: #141b26;
+}
+
+/* --- Botón flotante para agregar producto --- */
+.btn-flotante {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--acento);
+  color: #06131f;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.btn-flotante:hover {
+  filter: brightness(1.1);
+}
+
+/* --- Modal para agregar producto --- */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 14, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 30;
+}
+
+.modal-tarjeta {
+  width: 100%;
+  max-width: 420px;
+  background: var(--tarjeta);
+  border-radius: var(--radio);
+  padding: 28px 24px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-titulo {
+  margin: 0 0 20px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.modal-etiqueta {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--texto-tenue);
+  margin: 14px 0 6px;
+}
+
+.modal-input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 2px solid #313a49;
+  background: #0f1319;
+  color: var(--texto);
+  outline: none;
+}
+
+.modal-input:focus {
+  border-color: var(--acento);
+}
+
+.modal-mensaje {
+  margin: 14px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--error-texto);
+}
+
+.modal-mensaje.exito {
+  color: var(--ok-texto);
+}
+
+.modal-botones {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.modal-btn--secundario {
+  background: transparent;
+  border: 1px solid #313a49;
+  color: var(--texto-tenue);
+}
+
+.modal-btn--principal {
+  background: var(--acento);
+  color: #06131f;
+}
+
+.modal-btn--principal:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

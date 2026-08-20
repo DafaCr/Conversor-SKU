@@ -9,24 +9,7 @@
 (function () {
   "use strict";
 
-  // ------------------------------------------------------------
-  // Pega aquí la URL de tu Google Apps Script (misma URL para
-  // leer productos, avisar de códigos no encontrados, y guardar
-  // productos nuevos desde el botón "+").
-  // Mientras no la reemplaces, la página usa solo codigos.js y
-  // el botón "+" avisa que hace falta configurar Sheets primero.
-  // Ejemplo: "https://script.google.com/macros/s/AKfyc.../exec"
-  // ------------------------------------------------------------
   const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzxmWSWAkfJzRSecfXdlUvWh6jfVgBe1nYOIS-O23cyDck-QPJLKf3bukjhu0ydUIg/exec";
-
-  // ------------------------------------------------------------
-  // Esta clave debe ser IDÉNTICA a la que pongas en la constante
-  // CLAVE_SECRETA de tu Apps Script. Sirve como filtro simple para
-  // que no cualquiera que encuentre la URL pueda escribir en tu
-  // hoja. No es seguridad perfecta (alguien que vea el código
-  // fuente de la página puede verla), pero evita el abuso casual
-  // o de bots que prueban URLs al azar.
-  // ------------------------------------------------------------
   const CLAVE_SECRETA = "tambo2026";
 
   const input = document.getElementById("input-codigo");
@@ -37,9 +20,13 @@
   const contador = document.getElementById("contador");
   const listaResultados = document.getElementById("lista-resultados");
   const listaItems = document.getElementById("lista-items");
+  const resultadoAcciones = document.getElementById("resultado-acciones");
+  const btnEditar = document.getElementById("btn-editar");
+  const btnEliminar = document.getElementById("btn-eliminar");
 
   const btnAgregar = document.getElementById("btn-agregar");
   const modalFondo = document.getElementById("modal-fondo");
+  const modalTitulo = document.getElementById("modal-titulo");
   const formAgregar = document.getElementById("form-agregar");
   const campoNombre = document.getElementById("campo-nombre");
   const campoSku = document.getElementById("campo-sku");
@@ -48,27 +35,28 @@
   const btnCancelar = document.getElementById("btn-cancelar");
   const btnGuardar = document.getElementById("btn-guardar");
 
-  // "codigos" viene definido en codigos.js, cargado antes que este archivo.
-  // Empezamos usando esa lista local; si Google Sheets responde bien,
-  // la reemplazamos por la lista remota (ver cargarProductosRemotos).
   let codigosActivos = typeof codigos === "object" ? codigos : {};
   actualizarContador("local");
 
-  // Para la navegación con flechas ↑↓ en la lista de resultados múltiples.
   let indiceSeleccionado = -1;
+  let claveProductoActual = null; // código del producto mostrado en pantalla (para Editar/Eliminar)
+
+  // Estado del modal: si estamos editando un producto existente, y
+  // cuál era su código original (por si lo cambian durante la edición).
+  let modoEdicion = false;
+  let codigoOriginalEdicion = null;
+  let confirmacionPendientePara = null; // evita re-mostrar la advertencia si no cambiaron los datos
 
   mostrarResultadoVacio();
   cargarProductosRemotos();
 
-  // Mantener el foco siempre en el input, salvo que el usuario esté
-  // interactuando con un botón de copiar, un ítem de la lista, el
-  // botón "+", o algo dentro del modal de agregar producto.
   document.addEventListener("click", function (evento) {
     const tocaBotonCopiar = evento.target.closest && evento.target.closest(".sku-copiar");
     const tocaItemDeLista = evento.target.closest && evento.target.closest(".lista-item");
     const tocaBotonAgregar = evento.target.closest && evento.target.closest(".btn-flotante");
     const tocaModal = evento.target.closest && evento.target.closest(".modal-fondo");
-    if (!tocaBotonCopiar && !tocaItemDeLista && !tocaBotonAgregar && !tocaModal) {
+    const tocaAcciones = evento.target.closest && evento.target.closest(".resultado-acciones");
+    if (!tocaBotonCopiar && !tocaItemDeLista && !tocaBotonAgregar && !tocaModal && !tocaAcciones) {
       input.focus();
     }
   });
@@ -78,8 +66,6 @@
   });
 
   input.addEventListener("keydown", function (evento) {
-    // Si hay una lista de varios resultados visible, las flechas
-    // ↑↓ navegan entre ellos y Enter selecciona el resaltado.
     if (!listaResultados.hidden) {
       if (evento.key === "ArrowDown") {
         evento.preventDefault();
@@ -143,30 +129,51 @@
         }
       })
       .catch(function () {
-        // Sin internet, Google caído, o URL mal configurada:
+        // Sin internet, Google caído, o URL/clave mal configurada:
         // seguimos usando codigos.js normalmente.
       });
   }
 
-  function buscarProductoExacto(consulta) {
-    // Primero probamos coincidencia exacta tal cual (rápido y cubre
-    // el caso más común: escaneo de código de barras numérico).
-    if (codigosActivos[consulta]) {
-      return codigosActivos[consulta];
-    }
+  // Devuelve la CLAVE real (tal como está guardada) que coincide con
+  // la consulta, sin distinguir mayúsculas/minúsculas. Null si no hay.
+  function buscarClaveExacta(consulta) {
+    if (codigosActivos[consulta]) return consulta;
 
-    // Si no hubo coincidencia exacta, buscamos ignorando
-    // mayúsculas/minúsculas (útil para claves con letras, como
-    // "cafe", "CROA", "Mixt", etc.)
     const consultaMinuscula = consulta.toLowerCase();
     const claves = Object.keys(codigosActivos);
     for (let i = 0; i < claves.length; i++) {
       if (claves[i].toLowerCase() === consultaMinuscula) {
-        return codigosActivos[claves[i]];
+        return claves[i];
+      }
+    }
+    return null;
+  }
+
+  // Busca si un SKU ya pertenece a OTRO producto (para avisar antes
+  // de guardar). codigoExcluir permite ignorar el producto que se
+  // está editando actualmente (no debe "chocar" contra sí mismo).
+  function buscarProductoPorSku(sku, codigoExcluir) {
+    const skuMinuscula = sku.toLowerCase();
+    const entradas = Object.entries(codigosActivos);
+
+    for (let i = 0; i < entradas.length; i++) {
+      const clave = entradas[i][0];
+      const producto = entradas[i][1];
+
+      if (codigoExcluir && clave.toLowerCase() === codigoExcluir.toLowerCase()) {
+        continue;
+      }
+
+      const tieneSku = producto.skus.some(function (s) {
+        return s.toLowerCase() === skuMinuscula;
+      });
+
+      if (tieneSku) {
+        return { clave: clave, producto: producto };
       }
     }
 
-    return undefined;
+    return null;
   }
 
   function buscarCodigo() {
@@ -176,20 +183,21 @@
       return;
     }
 
-    const productoExacto = buscarProductoExacto(consulta);
+    const claveExacta = buscarClaveExacta(consulta);
 
-    if (productoExacto) {
+    if (claveExacta) {
+      const producto = codigosActivos[claveExacta];
       ocultarListaResultados();
-      mostrarResultadoOk(productoExacto.skus, productoExacto.nombre);
+      mostrarResultadoOk(claveExacta, producto.skus, producto.nombre);
     } else {
       const consultaMinuscula = consulta.toLowerCase();
-      const coincidencias = Object.values(codigosActivos).filter(function (producto) {
-        return producto.nombre.toLowerCase().indexOf(consultaMinuscula) !== -1;
+      const coincidencias = Object.entries(codigosActivos).filter(function (entrada) {
+        return entrada[1].nombre.toLowerCase().indexOf(consultaMinuscula) !== -1;
       });
 
       if (coincidencias.length === 1) {
         ocultarListaResultados();
-        mostrarResultadoOk(coincidencias[0].skus, coincidencias[0].nombre);
+        mostrarResultadoOk(coincidencias[0][0], coincidencias[0][1].skus, coincidencias[0][1].nombre);
       } else if (coincidencias.length > 1) {
         mostrarResultadoVacio();
         mostrarListaResultados(coincidencias);
@@ -202,12 +210,15 @@
     input.select();
   }
 
-  function mostrarResultadoOk(skus, nombre) {
+  function mostrarResultadoOk(clave, skus, nombre) {
     resultado.classList.remove("resultado--vacio", "resultado--error");
     resultado.classList.add("resultado--ok");
 
     mensajeError.hidden = true;
     resultadoNombre.textContent = nombre || "";
+
+    claveProductoActual = clave;
+    resultadoAcciones.hidden = false;
 
     renderizarSkus(skus);
 
@@ -220,6 +231,8 @@
     resultadoNombre.textContent = "";
     skusLista.innerHTML = "";
     mensajeError.hidden = false;
+    resultadoAcciones.hidden = true;
+    claveProductoActual = null;
 
     resultado.classList.remove("resultado--error");
     void resultado.offsetWidth;
@@ -233,6 +246,8 @@
     resultado.classList.add("resultado--vacio");
     resultadoNombre.textContent = "";
     mensajeError.hidden = true;
+    resultadoAcciones.hidden = true;
+    claveProductoActual = null;
 
     skusLista.innerHTML = "";
     const filaVacia = document.createElement("div");
@@ -286,7 +301,10 @@
     listaItems.innerHTML = "";
     indiceSeleccionado = -1;
 
-    coincidencias.forEach(function (producto) {
+    coincidencias.forEach(function (entrada) {
+      const clave = entrada[0];
+      const producto = entrada[1];
+
       const boton = document.createElement("button");
       boton.type = "button";
       boton.className = "lista-item";
@@ -304,7 +322,7 @@
 
       boton.addEventListener("click", function () {
         ocultarListaResultados();
-        mostrarResultadoOk(producto.skus, producto.nombre);
+        mostrarResultadoOk(clave, producto.skus, producto.nombre);
         input.value = "";
         input.focus();
       });
@@ -323,10 +341,7 @@
 
   function copiarAlPortapapeles(valor, boton) {
     if (!boton) return;
-
-    if (!navigator.clipboard) {
-      return;
-    }
+    if (!navigator.clipboard) return;
 
     navigator.clipboard.writeText(valor).then(function () {
       const textoOriginal = "Copiar";
@@ -351,25 +366,15 @@
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ tipo: "registro", codigo: consulta, clave: CLAVE_SECRETA })
-    }).catch(function () {
-      // Sin interrumpir al usuario si falla el envío.
-    });
+    }).catch(function () {});
   }
 
   // ------------------------------------------------------------
   // BOTÓN "+" — Agregar producto nuevo
   // ------------------------------------------------------------
 
-  campoCodigo.addEventListener("input", function () {
-    if (codigoDuplicadoConfirmado !== null) {
-      codigoDuplicadoConfirmado = null;
-      btnGuardar.textContent = "Guardar";
-      modalMensaje.hidden = true;
-    }
-  });
-
   btnAgregar.addEventListener("click", function () {
-    abrirModal();
+    abrirModalAgregar();
   });
 
   btnCancelar.addEventListener("click", function () {
@@ -377,7 +382,6 @@
   });
 
   modalFondo.addEventListener("click", function (evento) {
-    // Cerrar si se hace clic en el fondo oscuro, no en la tarjeta.
     if (evento.target === modalFondo) {
       cerrarModal();
     }
@@ -385,19 +389,51 @@
 
   formAgregar.addEventListener("submit", function (evento) {
     evento.preventDefault();
-    guardarProductoNuevo();
+    guardarProducto();
   });
 
-  // Para el flujo de "ya existe, ¿reemplazar?" al agregar un producto.
-  let codigoDuplicadoConfirmado = null;
+  [campoNombre, campoSku, campoCodigo].forEach(function (campo) {
+    campo.addEventListener("input", function () {
+      if (confirmacionPendientePara !== null) {
+        confirmacionPendientePara = null;
+        modalMensaje.hidden = true;
+        btnGuardar.textContent = modoEdicion ? "Guardar cambios" : "Guardar";
+      }
+    });
+  });
 
-  function abrirModal() {
+  function abrirModalAgregar() {
+    modoEdicion = false;
+    codigoOriginalEdicion = null;
+    modalTitulo.textContent = "Agregar producto";
+    btnGuardar.textContent = "Guardar";
+    campoCodigo.disabled = false;
+
     modalFondo.hidden = false;
     formAgregar.reset();
     modalMensaje.hidden = true;
     modalMensaje.classList.remove("exito");
-    codigoDuplicadoConfirmado = null;
-    btnGuardar.textContent = "Guardar";
+    confirmacionPendientePara = null;
+    campoNombre.focus();
+  }
+
+  function abrirModalEditar() {
+    if (!claveProductoActual) return;
+    const producto = codigosActivos[claveProductoActual];
+
+    modoEdicion = true;
+    codigoOriginalEdicion = claveProductoActual;
+    modalTitulo.textContent = "Editar producto";
+    btnGuardar.textContent = "Guardar cambios";
+
+    modalFondo.hidden = false;
+    modalMensaje.hidden = true;
+    modalMensaje.classList.remove("exito");
+    confirmacionPendientePara = null;
+
+    campoNombre.value = producto.nombre;
+    campoSku.value = producto.skus.join(",");
+    campoCodigo.value = claveProductoActual;
     campoNombre.focus();
   }
 
@@ -406,7 +442,7 @@
     input.focus();
   }
 
-  function guardarProductoNuevo() {
+  function guardarProducto() {
     const nombre = campoNombre.value.trim();
     const skusTexto = campoSku.value.trim();
     const codigo = campoCodigo.value.trim();
@@ -417,44 +453,64 @@
     }
 
     if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      mostrarMensajeModal("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar productos nuevos.", false);
+      mostrarMensajeModal("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar productos.", false);
       return;
     }
 
-    // Si ya existe un producto con ese código y todavía no confirmaron
-    // el reemplazo, mostramos una advertencia y esperamos un segundo
-    // clic en "Guardar" (que ahora dice "Reemplazar") para continuar.
-    const existente = buscarProductoExacto(codigo);
-    if (existente && codigoDuplicadoConfirmado !== codigo.toLowerCase()) {
-      codigoDuplicadoConfirmado = codigo.toLowerCase();
-      mostrarMensajeModal(
-        'Ya existe "' + existente.nombre + '" (SKU ' + existente.skus.join(" + ") + ') con ese código. Presiona "Reemplazar" para sobrescribirlo.',
-        false
-      );
-      btnGuardar.textContent = "Reemplazar";
+    const codigoAExcluir = modoEdicion ? codigoOriginalEdicion : null;
+    const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
+
+    // --- Verificar duplicados (código y cada SKU) ---
+    const advertencias = [];
+
+    const claveExistente = buscarClaveExacta(codigo);
+    const esMismoCodigoOriginal = modoEdicion && claveExistente && claveExistente.toLowerCase() === codigoOriginalEdicion.toLowerCase();
+    if (claveExistente && !esMismoCodigoOriginal) {
+      const productoExistente = codigosActivos[claveExistente];
+      advertencias.push('el código ya pertenece a "' + productoExistente.nombre + '"');
+    }
+
+    skusArray.forEach(function (sku) {
+      const coincidenciaSku = buscarProductoPorSku(sku, codigoAExcluir);
+      if (coincidenciaSku) {
+        advertencias.push('el SKU ' + sku + ' ya pertenece a "' + coincidenciaSku.producto.nombre + '"');
+      }
+    });
+
+    const claveConfirmacion = codigo.toLowerCase() + "|" + skusTexto.toLowerCase();
+
+    if (advertencias.length > 0 && confirmacionPendientePara !== claveConfirmacion) {
+      confirmacionPendientePara = claveConfirmacion;
+      mostrarMensajeModal("Atención: " + advertencias.join("; ") + ". Presiona de nuevo para guardar igualmente.", false);
+      btnGuardar.textContent = "Confirmar de todas formas";
       return;
     }
 
     btnGuardar.disabled = true;
     btnGuardar.textContent = "Guardando…";
 
+    const payload = modoEdicion
+      ? { tipo: "editar_producto", codigoOriginal: codigoOriginalEdicion, codigo: codigo, skus: skusTexto, nombre: nombre, clave: CLAVE_SECRETA }
+      : { tipo: "nuevo_producto", codigo: codigo, skus: skusTexto, nombre: nombre, clave: CLAVE_SECRETA };
+
     fetch(URL_APPS_SCRIPT, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        tipo: "nuevo_producto",
-        codigo: codigo,
-        skus: skusTexto,
-        nombre: nombre,
-        clave: CLAVE_SECRETA
-      })
+      body: JSON.stringify(payload)
     }).then(function () {
-      const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
+      if (modoEdicion && codigoOriginalEdicion.toLowerCase() !== codigo.toLowerCase()) {
+        delete codigosActivos[codigoOriginalEdicion];
+      }
       codigosActivos[codigo] = { skus: skusArray, nombre: nombre };
       actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
 
-      mostrarMensajeModal(existente ? "Producto reemplazado. Ya puedes buscarlo." : "Producto guardado. Ya puedes buscarlo.", true);
+      mostrarMensajeModal(modoEdicion ? "Cambios guardados." : "Producto guardado.", true);
+
+      if (modoEdicion && claveProductoActual && claveProductoActual.toLowerCase() === codigoOriginalEdicion.toLowerCase()) {
+        mostrarResultadoOk(codigo, skusArray, nombre);
+      }
+
       setTimeout(function () {
         cerrarModal();
       }, 1200);
@@ -462,7 +518,7 @@
       mostrarMensajeModal("No se pudo guardar (revisa tu conexión a internet).", false);
     }).finally(function () {
       btnGuardar.disabled = false;
-      btnGuardar.textContent = "Guardar";
+      btnGuardar.textContent = modoEdicion ? "Guardar cambios" : "Guardar";
     });
   }
 
@@ -471,4 +527,46 @@
     modalMensaje.hidden = false;
     modalMensaje.classList.toggle("exito", !!esExito);
   }
+
+  // ------------------------------------------------------------
+  // EDITAR / ELIMINAR desde el resultado
+  // ------------------------------------------------------------
+
+  btnEditar.addEventListener("click", function () {
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder editar productos.");
+      return;
+    }
+    abrirModalEditar();
+  });
+
+  btnEliminar.addEventListener("click", function () {
+    if (!claveProductoActual) return;
+
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder eliminar productos.");
+      return;
+    }
+
+    const producto = codigosActivos[claveProductoActual];
+    const confirmado = confirm('¿Eliminar "' + producto.nombre + '"? Esta acción no se puede deshacer.');
+    if (!confirmado) return;
+
+    const codigoAEliminar = claveProductoActual;
+
+    fetch(URL_APPS_SCRIPT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ tipo: "eliminar_producto", codigo: codigoAEliminar, clave: CLAVE_SECRETA })
+    }).then(function () {
+      delete codigosActivos[codigoAEliminar];
+      actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
+      mostrarResultadoVacio();
+      input.value = "";
+      input.focus();
+    }).catch(function () {
+      alert("No se pudo eliminar (revisa tu conexión a internet).");
+    });
+  });
 })();

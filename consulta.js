@@ -12,6 +12,7 @@
   const resultado = document.getElementById("resultado-doc");
   const filasDoc = document.getElementById("filas-doc");
   const mensajeError = document.getElementById("mensaje-error-doc");
+  const btnBuscarDoc = document.getElementById("btn-buscar-doc");
 
   // Controla el comportamiento de "doble Enter": el primer Enter
   // busca: el segundo Enter (sin cambiar el texto) copia el número.
@@ -33,10 +34,17 @@
 
   document.addEventListener("click", function (evento) {
     const tocaBotonCopiar = evento.target.closest && evento.target.closest(".sku-copiar");
-    if (!tocaBotonCopiar) {
+    const tocaBotonBuscar = evento.target.closest && evento.target.closest(".btn-buscar-discreto");
+    if (!tocaBotonCopiar && !tocaBotonBuscar) {
       input.focus();
     }
   });
+
+  if (btnBuscarDoc) {
+    btnBuscarDoc.addEventListener("click", function () {
+      consultarDocumento();
+    });
+  }
 
   input.addEventListener("input", function () {
     const limpio = input.value.replace(/\D/g, "");

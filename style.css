@@ -57,7 +57,7 @@ body {
 }
 
 .marca-logo {
-  height: 34px;
+  height: 52px;
   width: auto;
   filter: drop-shadow(0 4px 18px rgba(165, 26, 145, 0.45));
 }
@@ -260,18 +260,19 @@ body {
   position: absolute;
   right: 10px;
   bottom: 10px;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: 1px solid var(--tarjeta-borde);
   background: rgba(255, 255, 255, 0.03);
   color: var(--texto-tenue-2);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0.55;
+  z-index: 5;
   transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -402,12 +403,19 @@ body {
 
 /* --- Pie de página --- */
 .pie {
-  margin: 22px auto 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  margin: 0;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 400;
   color: var(--texto-tenue-2);
   letter-spacing: 0.02em;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* --- Botón flotante para agregar producto (esquina inferior izquierda) --- */

@@ -10,11 +10,18 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
   <main class="tarjeta">
+    <div class="marca">
+      <img src="logo.png?v=1" alt="Tambo+" class="marca-logo">
+    </div>
     <h1 class="titulo">Conversor de códigos</h1>
 
     <label for="input-codigo" class="etiqueta">Código o nombre del producto</label>
@@ -48,7 +55,12 @@
     <p id="contador" class="contador"></p>
   </main>
 
-  <a href="documento" class="btn-flotante btn-flotante--secundario" title="Consultar DNI / RUC" aria-label="Consultar DNI o RUC">🪪</a>
+  <p class="pie">Powered by Damner Carranza</p>
+
+  <a href="documento" class="btn-consulta-doc" title="Consultar DNI / RUC" aria-label="Consultar DNI o RUC">
+    <span class="icono">🪪</span>
+    <span>Buscar documento</span>
+  </a>
   <button id="btn-agregar" class="btn-flotante" type="button" title="Agregar producto" aria-label="Agregar producto">+</button>
 
   <div id="modal-fondo" class="modal-fondo" hidden>

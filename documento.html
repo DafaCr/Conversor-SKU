@@ -9,13 +9,20 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
   <main class="tarjeta">
-    <a href="/" class="volver-link">← Volver al conversor</a>
+    <a href="/" class="volver-link" id="link-volver">← Volver</a>
 
+    <div class="marca">
+      <img src="logo.png?v=1" alt="Tambo+" class="marca-logo">
+    </div>
     <h1 class="titulo">Consulta DNI / RUC</h1>
 
     <label for="input-documento" class="etiqueta">Número de documento</label>
@@ -36,10 +43,12 @@
       <p id="mensaje-error-doc" class="mensaje-error" hidden></p>
     </section>
 
-    <p class="contador">11 dígitos se busca como RUC · cualquier otra cantidad se busca como DNI</p>
+    <p class="contador">11 dígitos se busca como RUC · cualquier otra cantidad se busca como DNI · Esc para volver</p>
   </main>
 
+  <p class="pie">Powered by Damner Carranza</p>
+
   <script src="config.js?v=2"></script>
-  <script src="consulta.js?v=2"></script>
+  <script src="consulta.js?v=3"></script>
 </body>
 </html>

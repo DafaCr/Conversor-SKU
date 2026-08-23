@@ -1,10 +1,8 @@
 // ============================================================
 // CONSULTA.JS — Lógica de la página de consulta DNI/RUC
 // ------------------------------------------------------------
-// La consulta a la API de Factiliza pasa por el Apps Script (no
-// se llama directo desde aquí), para que el token de Factiliza
-// nunca quede visible en el código de la página. Ver comentarios
-// en apps-script-codigo.gs.
+// Llama directo a la API de Factiliza desde el navegador usando
+// TOKEN_FACTILIZA (definido en config.js).
 // ============================================================
 
 (function () {
@@ -23,6 +21,14 @@
 
   window.addEventListener("load", function () {
     input.focus();
+  });
+
+  // Escape vuelve al conversor principal, sin importar dónde
+  // esté el foco en ese momento.
+  document.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") {
+      window.location.href = "/";
+    }
   });
 
   document.addEventListener("click", function (evento) {

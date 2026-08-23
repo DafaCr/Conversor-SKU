@@ -35,8 +35,7 @@ html, body {
 body {
   margin: 0;
   background:
-    radial-gradient(680px 420px at 18% -8%, rgba(165, 26, 145, 0.35), transparent 60%),
-    radial-gradient(620px 480px at 100% 100%, rgba(165, 26, 145, 0.16), transparent 55%),
+    radial-gradient(620px 480px at 100% 100%, rgba(165, 26, 145, 0.08), transparent 55%),
     var(--negro-profundo);
   color: var(--texto);
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
@@ -257,6 +256,31 @@ body {
   text-align: center;
 }
 
+.btn-buscar-discreto {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--tarjeta-borde);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--texto-tenue-2);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-buscar-discreto:hover {
+  opacity: 1;
+  color: var(--morado-claro);
+  border-color: var(--morado);
+}
+
 .resultado--ok {
   background: linear-gradient(180deg, rgba(165, 26, 145, 0.12), rgba(165, 26, 145, 0.03));
   border-color: rgba(165, 26, 145, 0.4);
@@ -429,14 +453,14 @@ body {
   font-family: "Space Grotesk", "Inter", sans-serif;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 10px 30px -6px rgba(165, 26, 145, 0.65);
+  box-shadow: 0 4px 14px -6px rgba(165, 26, 145, 0.3);
   z-index: 20;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-consulta-doc:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px -6px rgba(165, 26, 145, 0.8);
+  box-shadow: 0 8px 20px -6px rgba(165, 26, 145, 0.45);
 }
 
 .btn-consulta-doc .icono {

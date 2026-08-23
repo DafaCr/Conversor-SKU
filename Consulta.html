@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta DNI / RUC</title>
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="stylesheet" href="style.css?v=11">
+</head>
+<body>
+
+  <main class="tarjeta">
+    <a href="index.html" class="volver-link">← Volver al conversor</a>
+
+    <h1 class="titulo">Consulta DNI / RUC</h1>
+
+    <label for="input-documento" class="etiqueta">Número de documento</label>
+    <input
+      type="text"
+      id="input-documento"
+      class="input-codigo"
+      inputmode="numeric"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      placeholder="Escribe el DNI o RUC…"
+      autofocus
+    >
+
+    <section id="resultado-doc" class="resultado resultado--vacio" aria-live="polite">
+      <div id="filas-doc" class="skus-lista"></div>
+      <p id="mensaje-error-doc" class="mensaje-error" hidden></p>
+    </section>
+
+    <p class="contador">11 dígitos se busca como RUC · cualquier otra cantidad se busca como DNI</p>
+  </main>
+
+  <script src="config.js?v=1"></script>
+  <script src="consulta.js?v=1"></script>
+</body>
+</html>

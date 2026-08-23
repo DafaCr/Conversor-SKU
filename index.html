@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -48,6 +48,7 @@
     <p id="contador" class="contador"></p>
   </main>
 
+  <a href="consulta.html" class="btn-flotante btn-flotante--secundario" title="Consultar DNI / RUC" aria-label="Consultar DNI o RUC">🪪</a>
   <button id="btn-agregar" class="btn-flotante" type="button" title="Agregar producto" aria-label="Agregar producto">+</button>
 
   <div id="modal-fondo" class="modal-fondo" hidden>
@@ -72,9 +73,11 @@
     </form>
   </div>
 
+  <!-- config.js debe cargarse primero: trae URL_APPS_SCRIPT y CLAVE_SECRETA -->
   <!-- codigos.js debe cargarse ANTES que script.js -->
   <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
+  <script src="config.js?v=1"></script>
   <script src="codigos.js?v=8"></script>
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=15"></script>
 </body>
 </html>

@@ -9,8 +9,8 @@
 (function () {
   "use strict";
 
-  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzxmWSWAkfJzRSecfXdlUvWh6jfVgBe1nYOIS-O23cyDck-QPJLKf3bukjhu0ydUIg/exec";
-  const CLAVE_SECRETA = "tambo2026";
+  // URL_APPS_SCRIPT y CLAVE_SECRETA vienen de config.js, cargado
+  // antes que este archivo en index.html.
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");

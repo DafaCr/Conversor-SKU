@@ -58,29 +58,41 @@
     const consulta = input.value.trim();
     if (!consulta) return;
 
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      mostrarError("Falta configurar Google Sheets (URL_APPS_SCRIPT) en config.js para poder consultar documentos.");
+    mostrarCargando();
+
+    const soloDigitos = consulta.replace(/\D/g, "");
+
+    if (!soloDigitos) {
+      mostrarError("Número inválido.");
       return;
     }
 
-    mostrarCargando();
+    const esRuc = soloDigitos.length === 11;
+    const url = esRuc
+      ? "https://api.factiliza.com/v1/ruc/info/" + soloDigitos
+      : "https://api.factiliza.com/v1/dni/info/" + soloDigitos;
 
-    const url = URL_APPS_SCRIPT
-      + "?clave=" + encodeURIComponent(CLAVE_SECRETA)
-      + "&accion=documento"
-      + "&numero=" + encodeURIComponent(consulta);
-
-    fetch(url)
+    fetch(url, {
+      headers: { Authorization: "Bearer " + TOKEN_FACTILIZA }
+    })
       .then(function (respuesta) { return respuesta.json(); })
       .then(function (datos) {
-        if (!datos || datos.resultado !== "ok") {
-          mostrarError((datos && datos.mensaje) || "No se encontró información para ese documento.");
+        if (!datos || !datos.success) {
+          mostrarError((datos && datos.message) || "No se encontró información para ese documento.");
           return;
         }
-        mostrarResultado(datos);
+
+        const nombre = esRuc ? datos.data.nombre_o_razon_social : datos.data.nombre_completo;
+        const numero = datos.data.numero;
+
+        mostrarResultado({
+          tipo: esRuc ? "ruc" : "dni",
+          nombre: nombre,
+          numero: numero
+        });
       })
       .catch(function () {
-        mostrarError("No se pudo conectar. Revisa tu internet o la configuración de config.js.");
+        mostrarError("No se pudo conectar con Factiliza. Revisa tu internet.");
       });
   }
 

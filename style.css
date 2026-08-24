@@ -53,7 +53,17 @@
   background:
     radial-gradient(560px 420px at 100% 100%, rgba(165, 26, 145, 0.07), transparent 55%),
     radial-gradient(520px 380px at 0% 0%, rgba(252, 225, 34, 0.14), transparent 60%),
-    var(--negro-profundo);
+    #841b76;
+}
+
+[data-tema="claro"] .btn-flotante {
+  background: linear-gradient(135deg, #fce122, #fce122);
+  color: var(--texto);
+}
+
+[data-tema="claro"] .btn-consulta-doc {
+  background: linear-gradient(135deg, #fce122, #fce122);
+  color: var(--texto);
 }
 
 * {

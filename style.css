@@ -7,10 +7,12 @@
   --negro: #0a0910;
   --negro-profundo: #050408;
   --tarjeta: #16121e;
+  --tarjeta-fin: #120e1a;
   --tarjeta-borde: #2a1f38;
   --morado: #a51a91;
   --morado-claro: #d43fbd;
   --morado-oscuro: #6e1260;
+  --amarillo: #fce122;
   --texto: #f4eef7;
   --texto-tenue: #a290ac;
   --texto-tenue-2: #6f5f7a;
@@ -22,6 +24,36 @@
   --error-texto: #ff8b8f;
   --radio: 18px;
   --sombra-morada: 0 0 0 1px rgba(165, 26, 145, 0.25), 0 20px 60px -20px rgba(165, 26, 145, 0.55);
+}
+
+/* --- Modo claro --- */
+[data-tema="claro"] {
+  --negro: #ffffff;
+  --negro-profundo: #f7f3f9;
+  --tarjeta: #ffffff;
+  --tarjeta-fin: #f4eef7;
+  --tarjeta-borde: #e6dbe9;
+  --morado: #a51a91;
+  --morado-claro: #8d1379;
+  --morado-oscuro: #6e1260;
+  --amarillo: #fce122;
+  --texto: #241b29;
+  --texto-tenue: #6b5b73;
+  --texto-tenue-2: #93849c;
+  --ok-fondo: #e3f7ec;
+  --ok-borde: #2eb872;
+  --ok-texto: #1c8a55;
+  --error-fondo: #fde8e9;
+  --error-borde: #e5484d;
+  --error-texto: #c22630;
+  --sombra-morada: 0 0 0 1px rgba(165, 26, 145, 0.14), 0 16px 46px -22px rgba(165, 26, 145, 0.3);
+}
+
+[data-tema="claro"] body {
+  background:
+    radial-gradient(560px 420px at 100% 100%, rgba(165, 26, 145, 0.07), transparent 55%),
+    radial-gradient(520px 380px at 0% 0%, rgba(252, 225, 34, 0.14), transparent 60%),
+    var(--negro-profundo);
 }
 
 * {
@@ -66,7 +98,7 @@ body {
   position: relative;
   width: 100%;
   max-width: 560px;
-  background: linear-gradient(180deg, var(--tarjeta) 0%, #120e1a 100%);
+  background: linear-gradient(180deg, var(--tarjeta) 0%, var(--tarjeta-fin) 100%);
   border: 1px solid var(--tarjeta-borde);
   border-radius: 24px;
   padding: 40px 36px 32px;
@@ -89,7 +121,7 @@ body {
 
 .volver-link {
   position: absolute;
-  top: 22px;
+  top: 52px;
   right: 28px;
   display: inline-flex;
   align-items: center;
@@ -402,6 +434,71 @@ body {
 }
 
 /* --- Pie de página --- */
+/* --- Interruptor de tema claro/oscuro --- */
+.interruptor-tema {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  z-index: 40;
+}
+
+.interruptor-icono {
+  font-size: 0.8rem;
+  line-height: 1;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.interruptor-icono--sol {
+  color: var(--amarillo);
+}
+
+.interruptor-icono--luna {
+  color: var(--texto-tenue);
+  opacity: 1;
+}
+
+[data-tema="claro"] .interruptor-icono--sol {
+  opacity: 1;
+}
+
+[data-tema="claro"] .interruptor-icono--luna {
+  opacity: 0.4;
+}
+
+.interruptor-pista {
+  position: relative;
+  width: 36px;
+  height: 19px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--morado-claro), var(--morado));
+  box-shadow: inset 0 0 0 1px rgba(165, 26, 145, 0.4);
+}
+
+.interruptor-bola {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  transform: translateX(17px);
+  transition: transform 0.2s ease;
+}
+
+[data-tema="claro"] .interruptor-bola {
+  transform: translateX(0);
+}
+
 .pie {
   position: fixed;
   left: 0;
@@ -496,7 +593,7 @@ body {
 .modal-tarjeta {
   width: 100%;
   max-width: 420px;
-  background: linear-gradient(180deg, var(--tarjeta) 0%, #120e1a 100%);
+  background: linear-gradient(180deg, var(--tarjeta) 0%, var(--tarjeta-fin) 100%);
   border: 1px solid var(--tarjeta-borde);
   border-radius: 20px;
   padding: 28px 24px;
@@ -584,7 +681,7 @@ body {
     font-size: 1.7rem;
   }
   .volver-link {
-    top: 18px;
+    top: 48px;
     right: 18px;
     font-size: 0.78rem;
   }

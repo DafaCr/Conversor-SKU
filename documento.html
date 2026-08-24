@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consulta DNI / RUC</title>
 
+  <!-- Aplica el tema guardado ANTES de pintar la página, para -->
+  <!-- evitar el parpadeo de un color equivocado al cargar.      -->
+  <script>
+    (function () {
+      try {
+        var tema = localStorage.getItem("tema") || "oscuro";
+        document.documentElement.setAttribute("data-tema", tema);
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Favicons e íconos -->
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -20,9 +31,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
+
+  <button type="button" id="interruptor-tema" class="interruptor-tema" role="switch" aria-checked="false" aria-label="Cambiar entre modo oscuro y modo claro">
+    <span class="interruptor-icono interruptor-icono--sol" aria-hidden="true">☀</span>
+    <span class="interruptor-pista"><span class="interruptor-bola"></span></span>
+    <span class="interruptor-icono interruptor-icono--luna" aria-hidden="true">☾</span>
+  </button>
 
   <main class="tarjeta">
     <a href="/" class="volver-link" id="link-volver">← Volver</a>
@@ -58,5 +75,6 @@
 
   <script src="config.js?v=2"></script>
   <script src="consulta.js?v=5"></script>
+  <script src="theme.js?v=1"></script>
 </body>
 </html>

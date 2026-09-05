@@ -20,6 +20,25 @@
   let numeroActual = null;
   let botonNumeroActual = null;
 
+  // A los 25 segundos de mostrar un resultado (o error), regresa
+  // solo al conversor principal, como una pantalla de kiosco.
+  const TIEMPO_REGRESO_MS = 25000;
+  let temporizadorRegreso = null;
+
+  function iniciarTemporizadorRegreso() {
+    limpiarTemporizadorRegreso();
+    temporizadorRegreso = setTimeout(function () {
+      window.location.href = "/";
+    }, TIEMPO_REGRESO_MS);
+  }
+
+  function limpiarTemporizadorRegreso() {
+    if (temporizadorRegreso) {
+      clearTimeout(temporizadorRegreso);
+      temporizadorRegreso = null;
+    }
+  }
+
   window.addEventListener("load", function () {
     input.focus();
   });
@@ -54,6 +73,7 @@
     // Si el usuario escribe algo distinto, ya no estamos en modo
     // "resultado listo": el próximo Enter debe buscar de nuevo.
     resultadoListo = false;
+    limpiarTemporizadorRegreso();
   });
 
   input.addEventListener("keydown", function (evento) {
@@ -113,6 +133,7 @@
   }
 
   function mostrarCargando() {
+    limpiarTemporizadorRegreso();
     resultado.classList.remove("resultado--ok", "resultado--error");
     resultado.classList.add("resultado--vacio");
     mensajeError.hidden = true;
@@ -155,6 +176,7 @@
     copiarAlPortapapeles(datos.nombre, filaNombre.boton);
 
     input.select();
+    iniciarTemporizadorRegreso();
   }
 
   function mostrarError(texto) {
@@ -167,11 +189,13 @@
     resultado.classList.remove("resultado--error");
     void resultado.offsetWidth; // fuerza un reflow, reinicia la animación
     resultado.classList.add("resultado--error");
+
+    iniciarTemporizadorRegreso();
   }
 
   function crearFila(etiquetaTexto, valorTexto) {
     const fila = document.createElement("div");
-    fila.className = "sku-fila";
+    fila.className = "sku-fila sku-fila--clickeable";
 
     const etiqueta = document.createElement("span");
     etiqueta.className = "sku-etiqueta";
@@ -192,6 +216,13 @@
     fila.appendChild(etiqueta);
     fila.appendChild(valor);
     fila.appendChild(boton);
+
+    // Permite copiar tocando cualquier parte de la fila (la etiqueta,
+    // el valor, o el espacio vacío), no solo el botón pequeño.
+    fila.addEventListener("click", function (evento) {
+      if (evento.target.closest(".sku-copiar")) return;
+      copiarAlPortapapeles(valorTexto, boton);
+    });
 
     return { fila: fila, boton: boton };
   }

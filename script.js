@@ -80,6 +80,12 @@
     input.focus();
   });
 
+  // Permite copiar el nombre del producto tocándolo directamente.
+  resultadoNombre.addEventListener("click", function () {
+    if (!resultadoNombre.textContent) return;
+    copiarAlPortapapeles(resultadoNombre.textContent, resultadoNombre);
+  });
+
   input.addEventListener("input", function () {
     // Si el usuario escribe algo, ya no seguimos en modo "copiar
     // el siguiente SKU del combo": el próximo Enter debe buscar.
@@ -488,7 +494,7 @@
 
     skus.forEach(function (sku, indice) {
       const fila = document.createElement("div");
-      fila.className = "sku-fila";
+      fila.className = "sku-fila sku-fila--clickeable";
 
       const etiqueta = document.createElement("span");
       etiqueta.className = "sku-etiqueta";
@@ -509,6 +515,14 @@
       fila.appendChild(etiqueta);
       fila.appendChild(valor);
       fila.appendChild(boton);
+
+      // Permite copiar tocando cualquier parte de la fila, no solo
+      // el botón pequeño "Copiar".
+      fila.addEventListener("click", function (evento) {
+        if (evento.target.closest(".sku-copiar")) return;
+        copiarAlPortapapeles(sku, boton);
+      });
+
       skusLista.appendChild(fila);
 
       botones.push({ sku: sku, boton: boton });
@@ -563,8 +577,9 @@
     if (!boton) return;
     if (!navigator.clipboard) return;
 
+    const textoOriginal = boton.textContent;
+
     navigator.clipboard.writeText(valor).then(function () {
-      const textoOriginal = "Copiar";
       boton.textContent = "¡Copiado!";
       boton.classList.add("copiado");
       setTimeout(function () {

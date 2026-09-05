@@ -98,11 +98,13 @@
 
         const nombre = esRuc ? datos.data.nombre_o_razon_social : datos.data.nombre_completo;
         const numero = datos.data.numero;
+        const direccion = datos.data.direccion_completa || datos.data.direccion || "";
 
         mostrarResultado({
           tipo: esRuc ? "ruc" : "dni",
           nombre: nombre,
-          numero: numero
+          numero: numero,
+          direccion: direccion
         });
       })
       .catch(function () {
@@ -138,6 +140,11 @@
     const etiquetaNumero = datos.tipo === "ruc" ? "Número de RUC" : "Número de DNI";
     const filaNumero = crearFila(etiquetaNumero, datos.numero);
     filasDoc.appendChild(filaNumero.fila);
+
+    if (datos.direccion) {
+      const filaDireccion = crearFila("Dirección", datos.direccion);
+      filasDoc.appendChild(filaDireccion.fila);
+    }
 
     numeroActual = datos.numero;
     botonNumeroActual = filaNumero.boton;

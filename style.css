@@ -509,6 +509,130 @@ body {
   transform: translateX(0);
 }
 
+/* --- Panel de accesos rápidos --- */
+.pagina-contenido {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+}
+
+.accesos-panel {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.accesos-titulo {
+  margin: 0 0 2px;
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texto-tenue);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.accesos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acceso-boton {
+  position: relative;
+  width: 100%;
+  padding: 20px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--tarjeta-borde);
+  background: linear-gradient(180deg, var(--tarjeta) 0%, var(--tarjeta-fin) 100%);
+  color: var(--texto);
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  word-break: break-word;
+  box-shadow: 0 4px 14px -8px rgba(165, 26, 145, 0.35);
+  transition: border-color 0.15s ease, transform 0.15s ease, color 0.15s ease;
+}
+
+.acceso-boton:hover {
+  border-color: var(--morado);
+  transform: translateY(-2px);
+}
+
+.acceso-boton.copiado {
+  border-color: var(--ok-borde);
+  color: var(--ok-texto);
+}
+
+.acceso-boton--agregar {
+  background: transparent;
+  color: var(--texto-tenue);
+  border-style: dashed;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 14px;
+  box-shadow: none;
+}
+
+.acceso-boton--agregar:hover {
+  color: var(--morado-claro);
+  border-color: var(--morado);
+  transform: none;
+}
+
+.acceso-eliminar {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  background: transparent;
+  border: none;
+  color: var(--texto-tenue-2);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.acceso-boton:hover .acceso-eliminar {
+  opacity: 0.7;
+}
+
+.acceso-eliminar:hover {
+  opacity: 1 !important;
+  color: var(--error-texto);
+}
+
+@media (max-width: 860px) {
+  .pagina-contenido {
+    flex-direction: column;
+    align-items: center;
+  }
+  .accesos-panel {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 0;
+  }
+  .accesos-lista {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .acceso-boton {
+    flex: 1 1 130px;
+    padding: 14px 10px;
+  }
+}
+
 .pie {
   position: fixed;
   left: 0;

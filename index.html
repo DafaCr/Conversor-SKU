@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 
@@ -42,42 +42,50 @@
     <span class="interruptor-icono interruptor-icono--luna" aria-hidden="true">☾</span>
   </button>
 
-  <main class="tarjeta">
-    <div class="marca">
-      <img src="logo.png?v=1" alt="Tambo+" class="marca-logo">
-    </div>
-    <h1 class="titulo">Conversor de códigos</h1>
-
-    <label for="input-codigo" class="etiqueta">Código o nombre del producto</label>
-    <input
-      type="text"
-      id="input-codigo"
-      class="input-codigo"
-      inputmode="text"
-      autocomplete="off"
-      autocorrect="off"
-      spellcheck="false"
-      placeholder="Escanea un código o escribe el nombre…"
-      autofocus
-    >
-
-    <section id="resultado" class="resultado resultado--vacio" aria-live="polite">
-      <span id="resultado-nombre" class="resultado-nombre"></span>
-      <div id="skus-lista" class="skus-lista"></div>
-      <p id="mensaje-error" class="mensaje-error" hidden>CÓDIGO NO REGISTRADO</p>
-      <div id="resultado-acciones" class="resultado-acciones" hidden>
-        <button id="btn-editar" type="button" class="accion-btn">Editar</button>
-        <button id="btn-eliminar" type="button" class="accion-btn accion-btn--peligro">Eliminar</button>
+  <div class="pagina-contenido">
+    <main class="tarjeta">
+      <div class="marca">
+        <img src="logo.png?v=1" alt="Tambo+" class="marca-logo">
       </div>
-    </section>
+      <h1 class="titulo">Conversor de códigos</h1>
 
-    <section id="lista-resultados" class="lista-resultados" hidden aria-live="polite">
-      <p class="lista-titulo">Varios productos coinciden, elige uno:</p>
-      <div id="lista-items" class="lista-items"></div>
-    </section>
+      <label for="input-codigo" class="etiqueta">Código o nombre del producto</label>
+      <input
+        type="text"
+        id="input-codigo"
+        class="input-codigo"
+        inputmode="text"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="Escanea un código o escribe el nombre…"
+        autofocus
+      >
 
-    <p id="contador" class="contador"></p>
-  </main>
+      <section id="resultado" class="resultado resultado--vacio" aria-live="polite">
+        <span id="resultado-nombre" class="resultado-nombre"></span>
+        <div id="skus-lista" class="skus-lista"></div>
+        <p id="mensaje-error" class="mensaje-error" hidden>CÓDIGO NO REGISTRADO</p>
+        <div id="resultado-acciones" class="resultado-acciones" hidden>
+          <button id="btn-editar" type="button" class="accion-btn">Editar</button>
+          <button id="btn-eliminar" type="button" class="accion-btn accion-btn--peligro">Eliminar</button>
+        </div>
+      </section>
+
+      <section id="lista-resultados" class="lista-resultados" hidden aria-live="polite">
+        <p class="lista-titulo">Varios productos coinciden, elige uno:</p>
+        <div id="lista-items" class="lista-items"></div>
+      </section>
+
+      <p id="contador" class="contador"></p>
+    </main>
+
+    <aside class="accesos-panel">
+      <h2 class="accesos-titulo">Accesos rápidos</h2>
+      <div id="accesos-lista" class="accesos-lista"></div>
+      <button type="button" id="btn-agregar-acceso" class="acceso-boton acceso-boton--agregar">+ Agregar</button>
+    </aside>
+  </div>
 
   <p class="pie">Developed by Damner F. Carranza R.</p>
 
@@ -109,12 +117,31 @@
     </form>
   </div>
 
+  <div id="modal-acceso-fondo" class="modal-fondo" hidden>
+    <form id="form-acceso" class="modal-tarjeta">
+      <h2 class="modal-titulo">Agregar acceso rápido</h2>
+
+      <label for="campo-acceso-nombre" class="modal-etiqueta">Nombre del botón</label>
+      <input type="text" id="campo-acceso-nombre" class="modal-input" autocomplete="off" placeholder="Ej: Café" required>
+
+      <label for="campo-acceso-skus" class="modal-etiqueta">SKU</label>
+      <input type="text" id="campo-acceso-skus" class="modal-input" autocomplete="off" placeholder="Ej: 0047 (o 0047,0048 si es combo)" required>
+
+      <p id="modal-acceso-mensaje" class="modal-mensaje" hidden></p>
+
+      <div class="modal-botones">
+        <button type="button" id="btn-acceso-cancelar" class="modal-btn modal-btn--secundario">Cancelar</button>
+        <button type="submit" id="btn-acceso-guardar" class="modal-btn modal-btn--principal">Guardar</button>
+      </div>
+    </form>
+  </div>
+
   <!-- config.js debe cargarse primero: trae URL_APPS_SCRIPT y CLAVE_SECRETA -->
   <!-- codigos.js debe cargarse ANTES que script.js -->
   <!-- El sufijo ?v= sirve para forzar actualización cuando cambias el archivo (ver instrucciones) -->
   <script src="config.js?v=2"></script>
   <script src="codigos.js?v=8"></script>
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
   <script src="theme.js?v=1"></script>
 </body>
 </html>

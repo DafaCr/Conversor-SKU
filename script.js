@@ -35,11 +35,25 @@
   const btnCancelar = document.getElementById("btn-cancelar");
   const btnGuardar = document.getElementById("btn-guardar");
 
+  const accesosLista = document.getElementById("accesos-lista");
+  const btnAgregarAcceso = document.getElementById("btn-agregar-acceso");
+  const modalAccesoFondo = document.getElementById("modal-acceso-fondo");
+  const formAcceso = document.getElementById("form-acceso");
+  const campoAccesoNombre = document.getElementById("campo-acceso-nombre");
+  const campoAccesoSkus = document.getElementById("campo-acceso-skus");
+  const modalAccesoMensaje = document.getElementById("modal-acceso-mensaje");
+  const btnAccesoCancelar = document.getElementById("btn-acceso-cancelar");
+  const btnAccesoGuardar = document.getElementById("btn-acceso-guardar");
+
   let codigosActivos = typeof codigos === "object" ? codigos : {};
   actualizarContador("local");
 
   let indiceSeleccionado = -1;
   let claveProductoActual = null; // código del producto mostrado en pantalla (para Editar/Eliminar)
+
+  // Para el ciclo de "Enter copia el siguiente SKU" cuando hay un combo.
+  let botonesSkuActuales = [];
+  let proximoIndiceCopia = 0;
 
   // Estado del modal: si estamos editando un producto existente, y
   // cuál era su código original (por si lo cambian durante la edición).
@@ -49,6 +63,7 @@
 
   mostrarResultadoVacio();
   cargarProductosRemotos();
+  cargarAccesosRemotos();
 
   document.addEventListener("click", function (evento) {
     const tocaBotonCopiar = evento.target.closest && evento.target.closest(".sku-copiar");
@@ -63,6 +78,12 @@
 
   window.addEventListener("load", function () {
     input.focus();
+  });
+
+  input.addEventListener("input", function () {
+    // Si el usuario escribe algo, ya no seguimos en modo "copiar
+    // el siguiente SKU del combo": el próximo Enter debe buscar.
+    proximoIndiceCopia = 0;
   });
 
   input.addEventListener("keydown", function (evento) {
@@ -89,6 +110,15 @@
 
     if (evento.key === "Enter") {
       evento.preventDefault();
+
+      // Si ya hay un combo mostrado y quedan SKUs por copiar, el
+      // siguiente Enter copia el siguiente SKU en vez de buscar de nuevo.
+      if (proximoIndiceCopia > 0 && proximoIndiceCopia < botonesSkuActuales.length) {
+        copiarAlPortapapeles(botonesSkuActuales[proximoIndiceCopia].sku, botonesSkuActuales[proximoIndiceCopia].boton);
+        proximoIndiceCopia++;
+        return;
+      }
+
       buscarCodigo();
     }
   });
@@ -132,6 +162,185 @@
         // Sin internet, Google caído, o URL/clave mal configurada:
         // seguimos usando codigos.js normalmente.
       });
+  }
+
+  // ------------------------------------------------------------
+  // ACCESOS RÁPIDOS (botones grandes que copian un SKU al instante)
+  // ------------------------------------------------------------
+
+  let accesosActuales = [];
+
+  function cargarAccesosRemotos() {
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      return;
+    }
+
+    fetch(URL_APPS_SCRIPT + "?clave=" + encodeURIComponent(CLAVE_SECRETA) + "&accion=accesos")
+      .then(function (respuesta) {
+        if (!respuesta.ok) throw new Error("Respuesta no válida");
+        return respuesta.json();
+      })
+      .then(function (accesosRemotos) {
+        if (Array.isArray(accesosRemotos)) {
+          accesosActuales = accesosRemotos;
+          renderizarAccesos();
+        }
+      })
+      .catch(function () {
+        // Sin internet o mal configurado: el panel queda vacío,
+        // sin interrumpir el resto de la página.
+      });
+  }
+
+  function renderizarAccesos() {
+    if (!accesosLista) return;
+    accesosLista.innerHTML = "";
+
+    accesosActuales.forEach(function (acceso) {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "acceso-boton";
+
+      const etiquetaTexto = document.createElement("span");
+      etiquetaTexto.className = "acceso-boton-texto";
+      etiquetaTexto.textContent = acceso.nombre;
+      boton.appendChild(etiquetaTexto);
+
+      const botonEliminar = document.createElement("button");
+      botonEliminar.type = "button";
+      botonEliminar.className = "acceso-eliminar";
+      botonEliminar.textContent = "✕";
+      botonEliminar.title = "Eliminar este acceso";
+      botonEliminar.addEventListener("click", function (evento) {
+        evento.stopPropagation();
+        eliminarAcceso(acceso.nombre);
+      });
+      boton.appendChild(botonEliminar);
+
+      boton.addEventListener("click", function () {
+        const textoACopiar = acceso.skus.join(" + ");
+        navigator.clipboard.writeText(textoACopiar).then(function () {
+          boton.classList.add("copiado");
+          etiquetaTexto.textContent = "¡Copiado!";
+          setTimeout(function () {
+            boton.classList.remove("copiado");
+            etiquetaTexto.textContent = acceso.nombre;
+          }, 1200);
+        }).catch(function () {
+          // Si falla el copiado automático, no rompemos nada.
+        });
+      });
+
+      accesosLista.appendChild(boton);
+    });
+  }
+
+  function eliminarAcceso(nombre) {
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder eliminar accesos.");
+      return;
+    }
+
+    const confirmado = confirm('¿Eliminar el acceso rápido "' + nombre + '"?');
+    if (!confirmado) return;
+
+    fetch(URL_APPS_SCRIPT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ tipo: "eliminar_acceso", nombre: nombre, clave: CLAVE_SECRETA })
+    }).then(function () {
+      accesosActuales = accesosActuales.filter(function (a) { return a.nombre !== nombre; });
+      renderizarAccesos();
+    }).catch(function () {
+      alert("No se pudo eliminar (revisa tu conexión a internet).");
+    });
+  }
+
+  if (btnAgregarAcceso) {
+    btnAgregarAcceso.addEventListener("click", function () {
+      modalAccesoFondo.hidden = false;
+      formAcceso.reset();
+      modalAccesoMensaje.hidden = true;
+      modalAccesoMensaje.classList.remove("exito");
+      campoAccesoNombre.focus();
+    });
+  }
+
+  if (btnAccesoCancelar) {
+    btnAccesoCancelar.addEventListener("click", function () {
+      modalAccesoFondo.hidden = true;
+      input.focus();
+    });
+  }
+
+  if (modalAccesoFondo) {
+    modalAccesoFondo.addEventListener("click", function (evento) {
+      if (evento.target === modalAccesoFondo) {
+        modalAccesoFondo.hidden = true;
+        input.focus();
+      }
+    });
+  }
+
+  if (formAcceso) {
+    formAcceso.addEventListener("submit", function (evento) {
+      evento.preventDefault();
+
+      const nombre = campoAccesoNombre.value.trim();
+      const skusTexto = campoAccesoSkus.value.trim();
+
+      if (!nombre || !skusTexto) {
+        modalAccesoMensaje.textContent = "Completa los 2 campos.";
+        modalAccesoMensaje.hidden = false;
+        modalAccesoMensaje.classList.remove("exito");
+        return;
+      }
+
+      if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
+        modalAccesoMensaje.textContent = "Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar accesos.";
+        modalAccesoMensaje.hidden = false;
+        modalAccesoMensaje.classList.remove("exito");
+        return;
+      }
+
+      btnAccesoGuardar.disabled = true;
+      btnAccesoGuardar.textContent = "Guardando…";
+
+      fetch(URL_APPS_SCRIPT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ tipo: "nuevo_acceso", nombre: nombre, skus: skusTexto, clave: CLAVE_SECRETA })
+      }).then(function () {
+        const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
+
+        const existente = accesosActuales.findIndex(function (a) { return a.nombre.toLowerCase() === nombre.toLowerCase(); });
+        if (existente !== -1) {
+          accesosActuales[existente] = { nombre: nombre, skus: skusArray };
+        } else {
+          accesosActuales.push({ nombre: nombre, skus: skusArray });
+        }
+        renderizarAccesos();
+
+        modalAccesoMensaje.textContent = "Acceso guardado.";
+        modalAccesoMensaje.hidden = false;
+        modalAccesoMensaje.classList.add("exito");
+
+        setTimeout(function () {
+          modalAccesoFondo.hidden = true;
+          modalAccesoMensaje.hidden = true;
+          input.focus();
+        }, 1000);
+      }).catch(function () {
+        modalAccesoMensaje.textContent = "No se pudo guardar (revisa tu conexión a internet).";
+        modalAccesoMensaje.hidden = false;
+        modalAccesoMensaje.classList.remove("exito");
+      }).finally(function () {
+        btnAccesoGuardar.disabled = false;
+        btnAccesoGuardar.textContent = "Guardar";
+      });
+    });
   }
 
   // Devuelve la CLAVE real (tal como está guardada) que coincide con
@@ -220,10 +429,12 @@
     claveProductoActual = clave;
     resultadoAcciones.hidden = false;
 
-    renderizarSkus(skus);
+    botonesSkuActuales = renderizarSkus(skus);
 
-    const primerBoton = skusLista.querySelector(".sku-copiar");
-    copiarAlPortapapeles(skus[0], primerBoton);
+    // Se copia automático el primer SKU. Si hay más de uno (combo),
+    // el próximo Enter (sin escribir nada nuevo) copia el siguiente.
+    copiarAlPortapapeles(botonesSkuActuales[0].sku, botonesSkuActuales[0].boton);
+    proximoIndiceCopia = 1;
   }
 
   function mostrarResultadoError(consulta) {
@@ -233,6 +444,8 @@
     mensajeError.hidden = false;
     resultadoAcciones.hidden = true;
     claveProductoActual = null;
+    botonesSkuActuales = [];
+    proximoIndiceCopia = 0;
 
     resultado.classList.remove("resultado--error");
     void resultado.offsetWidth;
@@ -248,6 +461,8 @@
     mensajeError.hidden = true;
     resultadoAcciones.hidden = true;
     claveProductoActual = null;
+    botonesSkuActuales = [];
+    proximoIndiceCopia = 0;
 
     skusLista.innerHTML = "";
     const filaVacia = document.createElement("div");
@@ -269,6 +484,7 @@
   function renderizarSkus(skus) {
     skusLista.innerHTML = "";
     const esCombo = skus.length > 1;
+    const botones = [];
 
     skus.forEach(function (sku, indice) {
       const fila = document.createElement("div");
@@ -294,7 +510,11 @@
       fila.appendChild(valor);
       fila.appendChild(boton);
       skusLista.appendChild(fila);
+
+      botones.push({ sku: sku, boton: boton });
     });
+
+    return botones;
   }
 
   function mostrarListaResultados(coincidencias) {

@@ -2,15 +2,12 @@
 // SCRIPT.JS — Lógica del conversor
 // No es necesario tocar este archivo para actualizar códigos.
 // La lista de productos puede venir de dos lugares:
-//   1. Google Sheets (si configuraste URL_APPS_SCRIPT abajo)
+//   1. Google Sheets a través de la API del sitio
 //   2. codigos.js, como respaldo si Sheets no responde
 // ============================================================
 
 (function () {
   "use strict";
-
-  // URL_APPS_SCRIPT y CLAVE_SECRETA vienen de config.js, cargado
-  // antes que este archivo en index.html.
 
   const input = document.getElementById("input-codigo");
   const resultado = document.getElementById("resultado");
@@ -148,12 +145,20 @@
     contador.textContent = total + " producto(s) cargados (" + textoOrigen + ")";
   }
 
-  function cargarProductosRemotos() {
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      return;
+  async function guardarEnSheets(datos) {
+    const respuesta = await fetch("/api/sheets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    });
+    const resultado = await respuesta.json().catch(() => null);
+    if (!respuesta.ok || !resultado?.ok) {
+      throw new Error(resultado?.message || "No se pudo guardar en Google Sheets.");
     }
+  }
 
-    fetch(URL_APPS_SCRIPT + "?clave=" + encodeURIComponent(CLAVE_SECRETA))
+  function cargarProductosRemotos() {
+    fetch("/api/sheets")
       .then(function (respuesta) {
         if (!respuesta.ok) throw new Error("Respuesta no válida");
         return respuesta.json();
@@ -177,11 +182,7 @@
   let accesosActuales = [];
 
   function cargarAccesosRemotos() {
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      return;
-    }
-
-    fetch(URL_APPS_SCRIPT + "?clave=" + encodeURIComponent(CLAVE_SECRETA) + "&accion=accesos")
+    fetch("/api/sheets?accion=accesos")
       .then(function (respuesta) {
         if (!respuesta.ok) throw new Error("Respuesta no válida");
         return respuesta.json();
@@ -242,24 +243,14 @@
   }
 
   function eliminarAcceso(nombre) {
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder eliminar accesos.");
-      return;
-    }
-
     const confirmado = confirm('¿Eliminar el acceso rápido "' + nombre + '"?');
     if (!confirmado) return;
 
-    fetch(URL_APPS_SCRIPT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ tipo: "eliminar_acceso", nombre: nombre, clave: CLAVE_SECRETA })
-    }).then(function () {
+    guardarEnSheets({ tipo: "eliminar_acceso", nombre: nombre }).then(function () {
       accesosActuales = accesosActuales.filter(function (a) { return a.nombre !== nombre; });
       renderizarAccesos();
-    }).catch(function () {
-      alert("No se pudo eliminar (revisa tu conexión a internet).");
+    }).catch(function (error) {
+      alert(error.message || "No se pudo eliminar (revisa tu conexión a internet).");
     });
   }
 
@@ -303,22 +294,10 @@
         return;
       }
 
-      if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-        modalAccesoMensaje.textContent = "Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar accesos.";
-        modalAccesoMensaje.hidden = false;
-        modalAccesoMensaje.classList.remove("exito");
-        return;
-      }
-
       btnAccesoGuardar.disabled = true;
       btnAccesoGuardar.textContent = "Guardando…";
 
-      fetch(URL_APPS_SCRIPT, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ tipo: "nuevo_acceso", nombre: nombre, skus: skusTexto, clave: CLAVE_SECRETA })
-      }).then(function () {
+      guardarEnSheets({ tipo: "nuevo_acceso", nombre: nombre, skus: skusTexto }).then(function () {
         const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
 
         const existente = accesosActuales.findIndex(function (a) { return a.nombre.toLowerCase() === nombre.toLowerCase(); });
@@ -338,8 +317,8 @@
           modalAccesoMensaje.hidden = true;
           input.focus();
         }, 1000);
-      }).catch(function () {
-        modalAccesoMensaje.textContent = "No se pudo guardar (revisa tu conexión a internet).";
+      }).catch(function (error) {
+        modalAccesoMensaje.textContent = error.message || "No se pudo guardar (revisa tu conexión a internet).";
         modalAccesoMensaje.hidden = false;
         modalAccesoMensaje.classList.remove("exito");
       }).finally(function () {
@@ -592,16 +571,7 @@
   }
 
   function registrarCodigoNoEncontrado(consulta) {
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      return;
-    }
-
-    fetch(URL_APPS_SCRIPT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ tipo: "registro", codigo: consulta, clave: CLAVE_SECRETA })
-    }).catch(function () {});
+    guardarEnSheets({ tipo: "registro", codigo: consulta }).catch(function () {});
   }
 
   // ------------------------------------------------------------
@@ -687,11 +657,6 @@
       return;
     }
 
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      mostrarMensajeModal("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder guardar productos.", false);
-      return;
-    }
-
     const codigoAExcluir = modoEdicion ? codigoOriginalEdicion : null;
     const skusArray = skusTexto.split(",").map(function (s) { return s.trim(); }).filter(function (s) { return s !== ""; });
 
@@ -725,20 +690,15 @@
     btnGuardar.textContent = "Guardando…";
 
     const payload = modoEdicion
-      ? { tipo: "editar_producto", codigoOriginal: codigoOriginalEdicion, codigo: codigo, skus: skusTexto, nombre: nombre, clave: CLAVE_SECRETA }
-      : { tipo: "nuevo_producto", codigo: codigo, skus: skusTexto, nombre: nombre, clave: CLAVE_SECRETA };
+      ? { tipo: "editar_producto", codigoOriginal: codigoOriginalEdicion, codigo: codigo, skus: skusTexto, nombre: nombre }
+      : { tipo: "nuevo_producto", codigo: codigo, skus: skusTexto, nombre: nombre };
 
-    fetch(URL_APPS_SCRIPT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    }).then(function () {
+    guardarEnSheets(payload).then(function () {
       if (modoEdicion && codigoOriginalEdicion.toLowerCase() !== codigo.toLowerCase()) {
         delete codigosActivos[codigoOriginalEdicion];
       }
       codigosActivos[codigo] = { skus: skusArray, nombre: nombre };
-      actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
+      actualizarContador("sheets");
 
       mostrarMensajeModal(modoEdicion ? "Cambios guardados." : "Producto guardado.", true);
 
@@ -749,8 +709,8 @@
       setTimeout(function () {
         cerrarModal();
       }, 1200);
-    }).catch(function () {
-      mostrarMensajeModal("No se pudo guardar (revisa tu conexión a internet).", false);
+    }).catch(function (error) {
+      mostrarMensajeModal(error.message || "No se pudo guardar (revisa tu conexión a internet).", false);
     }).finally(function () {
       btnGuardar.disabled = false;
       btnGuardar.textContent = modoEdicion ? "Guardar cambios" : "Guardar";
@@ -768,20 +728,11 @@
   // ------------------------------------------------------------
 
   btnEditar.addEventListener("click", function () {
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder editar productos.");
-      return;
-    }
     abrirModalEditar();
   });
 
   btnEliminar.addEventListener("click", function () {
     if (!claveProductoActual) return;
-
-    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf("PEGA_AQUI") !== -1) {
-      alert("Falta configurar Google Sheets (URL_APPS_SCRIPT) para poder eliminar productos.");
-      return;
-    }
 
     const producto = codigosActivos[claveProductoActual];
     const confirmado = confirm('¿Eliminar "' + producto.nombre + '"? Esta acción no se puede deshacer.');
@@ -789,19 +740,14 @@
 
     const codigoAEliminar = claveProductoActual;
 
-    fetch(URL_APPS_SCRIPT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ tipo: "eliminar_producto", codigo: codigoAEliminar, clave: CLAVE_SECRETA })
-    }).then(function () {
+    guardarEnSheets({ tipo: "eliminar_producto", codigo: codigoAEliminar }).then(function () {
       delete codigosActivos[codigoAEliminar];
-      actualizarContador(URL_APPS_SCRIPT.indexOf("PEGA_AQUI") === -1 ? "sheets" : "local");
+      actualizarContador("sheets");
       mostrarResultadoVacio();
       input.value = "";
       input.focus();
-    }).catch(function () {
-      alert("No se pudo eliminar (revisa tu conexión a internet).");
+    }).catch(function (error) {
+      alert(error.message || "No se pudo eliminar (revisa tu conexión a internet).");
     });
   });
 })();

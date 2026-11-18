@@ -1,8 +1,7 @@
 // ============================================================
 // CONSULTA.JS — Lógica de la página de consulta DNI/RUC
 // ------------------------------------------------------------
-// Llama directo a la API de Factiliza desde el navegador usando
-// TOKEN_FACTILIZA (definido en config.js).
+// Consulta documentos a través de la API del sitio.
 // ============================================================
 
 (function () {
@@ -96,18 +95,16 @@
 
     const soloDigitos = consulta.replace(/\D/g, "");
 
-    if (!soloDigitos) {
-      mostrarError("Número inválido.");
+    if (soloDigitos.length !== 8 && soloDigitos.length !== 11) {
+      mostrarError("Ingresa un DNI de 8 dígitos o un RUC de 11 dígitos.");
       return;
     }
 
     const esRuc = soloDigitos.length === 11;
-    const url = esRuc
-      ? "https://api.factiliza.com/v1/ruc/info/" + soloDigitos
-      : "https://api.factiliza.com/v1/dni/info/" + soloDigitos;
-
-    fetch(url, {
-      headers: { Authorization: "Bearer " + TOKEN_FACTILIZA }
+    fetch("/api/documento", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numero: soloDigitos })
     })
       .then(function (respuesta) { return respuesta.json(); })
       .then(function (datos) {
@@ -128,7 +125,7 @@
         });
       })
       .catch(function () {
-        mostrarError("No se pudo conectar con Factiliza. Revisa tu internet.");
+        mostrarError("No se pudo conectar con el servicio de consulta. Revisa tu conexión.");
       });
   }
 
